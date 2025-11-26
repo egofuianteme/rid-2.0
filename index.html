@@ -23,7 +23,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     
-    // Expor funcões Firebase globalmente
+    // Expor fun����ões Firebase globalmente
     window.firebaseDB = {
       db,
       collection,
@@ -1350,130 +1350,20 @@
     // ============================================
     // SEÇÃO RIDs (SIMPLIFICADA)
     // ============================================
-    function renderRidsSection(content) {<button id="btn-admin-novo-rid"
-  style="
-    padding: 12px 20px;
-    background: ${config.primary_action_color};
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  ">
-  ${icons.plus}
-  <span>Novo RID</span>
-</button>
-
+    function renderRidsSection(content) {
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      content.innerHTML = `
+        <div class="fade-in">
+          <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Gestão de RIDs</h1>
+          <p style="margin: 0 0 32px 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Todos os RIDs registrados</p>
+          
+          <div id="rids-list-container"></div>
+        </div>
+      `;
+      
+      renderRidsList();
     }
-    function abrirModalNovoRidAdmin() {
-  // Criação do modal
-  const modal = document.createElement('div');
-  modal.id = "modal-novo-rid-admin";
-  modal.style.cssText = `
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-  `;
-
-  modal.innerHTML = `
-    <div style="
-      width: 100%;
-      max-width: 600px;
-      background: white;
-      padding: 28px;
-      border-radius: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    ">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="margin:0; font-size:20px;">Novo RID (Admin)</h2>
-        <button id="fechar-modal-admin-rid" style="
-          background:none; border:none; cursor:pointer; font-size:20px;
-        ">✖</button>
-      </div>
-
-      <label>Emitente</label>
-      <input id="rid-admin-emitente" type="text" style="padding:10px; border:1px solid #ccc; border-radius:8px;">
-
-      <label>Funcionário / Terceiro</label>
-      <input id="rid-admin-funcionario" type="text" style="padding:10px; border:1px solid #ccc; border-radius:8px;">
-
-      <label>Setor</label>
-      <input id="rid-admin-setor" type="text" style="padding:10px; border:1px solid #ccc; border-radius:8px;">
-
-      <label>Local do Incidente</label>
-      <input id="rid-admin-local" type="text" style="padding:10px; border:1px solid #ccc; border-radius:8px;">
-
-      <label>Descrição</label>
-      <textarea id="rid-admin-descricao" style="
-        padding:10px; border:1px solid #ccc; border-radius:8px; height:100px;
-      "></textarea>
-
-      <button id="btn-salvar-admin-rid" style="
-        margin-top: 10px;
-        background: #16a34a;
-        color: white;
-        padding: 12px;
-        border-radius: 8px;
-        border: none;
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 600;
-      ">
-        Salvar RID
-      </button>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  // Fechar modal
-  document.getElementById("fechar-modal-admin-rid").onclick = () => modal.remove();
-
-  // Clique fora fecha
-  modal.onclick = (e) => {
-    if (e.target === modal) modal.remove();
-  };
-
-  // SALVAR NO FIRESTORE
-  document.getElementById("btn-salvar-admin-rid").onclick = async () => {
-    const emitente = document.getElementById("rid-admin-emitente").value.trim();
-    const funcionario = document.getElementById("rid-admin-funcionario").value.trim();
-    const setor = document.getElementById("rid-admin-setor").value.trim();
-    const local = document.getElementById("rid-admin-local").value.trim();
-    const descricao = document.getElementById("rid-admin-descricao").value.trim();
-
-    if (!emitente || !funcionario || !setor || !local || !descricao) {
-      alert("Preencha todos os campos!");
-      return;
-    }
-
-    await addDoc(collection(firebaseDB.db, "rids"), {
-      emitente,
-      funcionario,
-      setor,
-      local,
-      descricao,
-      data: new Date().toISOString()
-    });
-
-    alert("RID criado com sucesso!");
-    modal.remove();
-  };
-}
-
-document.getElementById("btn-admin-novo-rid")
-  .addEventListener("click", abrirModalNovoRidAdmin);
-
     
     function renderRidsList() {
       const container = $('rids-list-container');
@@ -1937,7 +1827,7 @@ document.getElementById("btn-admin-novo-rid")
       content.innerHTML = `
         <div class="fade-in">
           <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Funcionários</h1>
-          <p style="margin: 0 0 32px 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Lista de funcionarios cadastrados</p>
+          <p style="margin: 0 0 32px 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Lista de funcion��rios cadastrados</p>
           
           <div id="funcionarios-list-container"></div>
         </div>
