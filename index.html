@@ -1,0 +1,2875 @@
+<!doctype html>
+<html lang="pt-BR">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Gestão de RIDs</title>
+  <script src="/_sdk/element_sdk.js"></script><!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6yomHyxKUVYCNjDVzK_ruFO8RYMZvl_k",
+      authDomain: "sistema-rid-001.firebaseapp.com",
+      projectId: "sistema-rid-001",
+      storageBucket: "sistema-rid-001.firebasestorage.app",
+      messagingSenderId: "875061628205",
+      appId: "1:875061628205:web:6b2fa59e90a9846d1157a4"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    // Expor fun����ões Firebase globalmente
+    window.firebaseDB = {
+      db,
+      collection,
+      addDoc,
+      getDocs,
+      updateDoc,
+      deleteDoc,
+      doc,
+      query,
+      where,
+      orderBy,
+      onSnapshot
+    };
+    
+    // ============================================
+    // FUNÇÕES FIREBASE - SALVAR E BUSCAR DADOS
+    // ============================================
+    
+    /**
+     * Salvar um novo RID no Firestore
+     */
+    window.salvarRIDFirebase = async (ridData) => {
+      try {
+        const docRef = await addDoc(collection(db, 'rids'), {
+          ...ridData,
+          data_criacao: new Date().toISOString(),
+          ultimo_update: new Date().toISOString()
+        });
+        console.log('✅ RID salvo no Firebase com ID:', docRef.id);
+        return docRef.id;
+      } catch (error) {
+        console.error('❌ Erro ao salvar RID no Firebase:', error);
+        throw error;
+      }
+    };
+    
+    /**
+     * Salvar funcionário no Firestore
+     */
+    window.salvarFuncionarioFirebase = async (funcData) => {
+      try {
+        const docRef = await addDoc(collection(db, 'funcionarios'), {
+          ...funcData,
+          data_criacao: new Date().toISOString()
+        });
+        console.log('✅ Funcionário salvo no Firebase com ID:', docRef.id);
+        return docRef.id;
+      } catch (error) {
+        console.error('❌ Erro ao salvar funcionário no Firebase:', error);
+        throw error;
+      }
+    };
+    
+    /**
+     * Buscar todos os RIDs do Firestore
+     */
+    window.buscarRIDsFirebase = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'rids'));
+        const rids = [];
+        querySnapshot.forEach((doc) => {
+          rids.push({
+            firebaseId: doc.id,
+            ...doc.data()
+          });
+        });
+        console.log('��� RIDs buscados do Firebase:', rids.length);
+        return rids;
+      } catch (error) {
+        console.error('❌ Erro ao buscar RIDs do Firebase:', error);
+        throw error;
+      }
+    };
+    
+    /**
+     * Buscar todos os funcionários do Firestore
+     */
+    window.buscarFuncionariosFirebase = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'funcionarios'));
+        const funcionarios = [];
+        querySnapshot.forEach((doc) => {
+          funcionarios.push({
+            firebaseId: doc.id,
+            ...doc.data()
+          });
+        });
+        console.log('�� Funcionários buscados do Firebase:', funcionarios.length);
+        return funcionarios;
+      } catch (error) {
+        console.error('❌ Erro ao buscar funcionários do Firebase:', error);
+        throw error;
+      }
+    };
+    
+    /**
+     * Atualizar um RID existente
+     */
+    window.atualizarRIDFirebase = async (ridId, updates) => {
+      try {
+        const ridRef = doc(db, 'rids', ridId);
+        await updateDoc(ridRef, {
+          ...updates,
+          ultimo_update: new Date().toISOString()
+        });
+        console.log('✅ RID atualizado no Firebase:', ridId);
+      } catch (error) {
+        console.error('❌ Erro ao atualizar RID no Firebase:', error);
+        throw error;
+      }
+    };
+    
+    /**
+     * Deletar um RID
+     */
+    window.deletarRIDFirebase = async (ridId) => {
+      try {
+        await deleteDoc(doc(db, 'rids', ridId));
+        console.log('✅ RID deletado do Firebase:', ridId);
+      } catch (error) {
+        console.error('❌ Erro ao deletar RID do Firebase:', error);
+        throw error;
+      }
+    };
+    
+    /**
+     * Deletar um funcionário
+     */
+    window.deletarFuncionarioFirebase = async (funcId) => {
+      try {
+        await deleteDoc(doc(db, 'funcionarios', funcId));
+        console.log('✅ Funcionário deletado do Firebase:', funcId);
+      } catch (error) {
+        console.error('❌ Erro ao deletar funcionário do Firebase:', error);
+        throw error;
+      }
+    };
+    
+    /**
+     * Listener em tempo real para RIDs
+     */
+    window.escutarRIDsFirebase = (callback) => {
+      const q = query(collection(db, 'rids'), orderBy('data_criacao', 'desc'));
+      return onSnapshot(q, (snapshot) => {
+        const rids = [];
+        const changes = [];
+        
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'modified') {
+            changes.push({
+              type: 'modified',
+              data: {
+                firebaseId: change.doc.id,
+                ...change.doc.data()
+              }
+            });
+          }
+        });
+        
+        snapshot.forEach((doc) => {
+          rids.push({
+            firebaseId: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        callback(rids, changes);
+      });
+    };
+    
+    /**
+     * Listener em tempo real para funcionários
+     */
+    window.escutarFuncionariosFirebase = (callback) => {
+      const q = query(collection(db, 'funcionarios'), orderBy('data_criacao', 'desc'));
+      return onSnapshot(q, (snapshot) => {
+        const funcionarios = [];
+        snapshot.forEach((doc) => {
+          funcionarios.push({
+            firebaseId: doc.id,
+            ...doc.data()
+          });
+        });
+        callback(funcionarios);
+      });
+    };
+    
+    console.log('��� Firebase inicializado com sucesso!');
+    console.log('📡 Sincronização em tempo real ativada!');
+  </script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    #app-root {
+      width: 100%;
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .spinner {
+      border: 2px solid rgba(0,0,0,0.1);
+      border-left-color: currentColor;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.6s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    input:focus, select:focus, textarea:focus, button:focus {
+      outline: none;
+    }
+    
+    .scrollable {
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    
+    .scrollable::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .scrollable::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .scrollable::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 3px;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div id="app-root"></div>
+  <script>
+    // ============================================
+    // CONFIGURAÇÃO EDIT��VEL
+    // ============================================
+    const defaultConfig = {
+      background_color: "#F5F5F5",
+      surface_color: "#FFFFFF",
+      text_color: "#2c2c2c",
+      primary_action_color: "#FFC642",
+      secondary_action_color: "#949494",
+      
+      font_family: "Inter",
+      font_size: 15,
+      
+      titulo_sistema: "Sistema de Gestão de RIDs",
+      texto_login: "Acesse sua conta",
+      usuario_admin: "admin",
+      senha_admin: "admin123"
+    };
+    
+    // ============================================
+    // ESTADO GLOBAL
+    // ============================================
+    let currentData = [];
+    let currentFuncionarios = [];
+    let currentUser = null;
+    let currentAdminSection = 'dashboard';
+    let isSaving = false;
+    let ridsListener = null;
+    let funcionariosListener = null;
+    let notificacoes = [];
+    let notificacoesLidas = new Set();
+    
+    // CPFs com privilégios administrativos
+    const cpfsAdministradores = [
+      '38927158020',
+      '71294531004',
+      '05862974006',
+      '93510482098',
+      '46087319050',
+      '14750368013',
+      '82176495007',
+      '37421059018',
+      '50984237092',
+      '28617594001',
+      '67039821040',
+      '84375906053',
+      '21498657009',
+      '79542083076',
+      '03867091085',
+      '95210433062',
+      '42891576044',
+      '60328154027',
+      '87451923005',
+      '15974368080'
+    ];
+    
+    // ============================================
+    // HELPERS
+    // ============================================
+    function $(id) {
+      return document.getElementById(id);
+    }
+    
+    function showMessage(msg, type = 'info') {
+      const container = $('message-container');
+      if (!container) return;
+      
+      const div = document.createElement('div');
+      div.className = `message-toast ${type}`;
+      div.textContent = msg;
+      div.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      `;
+      
+      if (type === 'error') {
+        div.style.background = '#ff4444';
+        div.style.color = '#fff';
+      } else if (type === 'success') {
+        div.style.background = '#22c55e';
+        div.style.color = '#fff';
+      } else {
+        div.style.background = '#e4a40d';
+        div.style.color = '#fff';
+      }
+      
+      container.appendChild(div);
+      
+      setTimeout(() => {
+        div.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => div.remove(), 300);
+      }, 3000);
+    }
+    
+    function atualizarBadgeNotificacoes() {
+      const badge = $('notif-badge');
+      if (!badge) return;
+      
+      const naoLidas = notificacoes.filter(n => !notificacoesLidas.has(n.ridId));
+      
+      if (naoLidas.length > 0) {
+        badge.textContent = naoLidas.length;
+        badge.style.display = 'block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+    
+    // ============================================
+    // ��CONES SVG
+    // ============================================
+    const icons = {
+      user: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+      lock: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`,
+      dashboard: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`,
+      file: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`,
+      users: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+      chart: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
+      logout: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`,
+      plus: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+      trash: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`,
+      edit: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
+      check: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+      x: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
+    };
+    
+    // ============================================
+    // SINCRONIZAÇÃO FIREBASE EM TEMPO REAL
+    // ============================================
+    function iniciarSincronizacaoFirebase() {
+      if (!window.escutarRIDsFirebase || !window.escutarFuncionariosFirebase) {
+        console.log('⏳ Aguardando Firebase...');
+        setTimeout(iniciarSincronizacaoFirebase, 500);
+        return;
+      }
+      
+      console.log('🔥 Iniciando sincronização em tempo real...');
+      
+      // Listener para RIDs
+      ridsListener = window.escutarRIDsFirebase((rids, changes) => {
+        console.log('📡 RIDs atualizados:', rids.length);
+        
+        // Verificar novas designações para o usuário logado
+        if (currentUser && currentUser.tipo === 'admin') {
+          // Processar mudanças (designações)
+          if (changes && changes.length > 0) {
+            changes.forEach(change => {
+              const rid = change.data;
+              
+              // Verificar se foi designado para o usuário atual
+              if (rid.responsavel_acoes === currentUser.nome && 
+                  rid.responsavel_acoes && 
+                  !notificacoesLidas.has(rid.firebaseId)) {
+                
+                const jaExiste = notificacoes.find(n => n.ridId === rid.firebaseId);
+                if (!jaExiste) {
+                  notificacoes.push({
+                    ridId: rid.firebaseId,
+                    titulo: rid.titulo || 'RID sem título',
+                    data: new Date().toISOString()
+                  });
+                  console.log('🔔 Nova notificação (designaç��o):', rid.titulo);
+                  showMessage(`Novo RID designado: ${rid.titulo}`, 'info');
+                }
+              }
+            });
+          }
+          
+          // Também verificar todos os RIDs designados (para primeira carga)
+          const ridsDesignados = rids.filter(rid => 
+            rid.responsavel_acoes === currentUser.nome && 
+            rid.responsavel_acoes && 
+            !notificacoesLidas.has(rid.firebaseId)
+          );
+          
+          // Adicionar notificações que ainda não existem
+          ridsDesignados.forEach(rid => {
+            const jaExiste = notificacoes.find(n => n.ridId === rid.firebaseId);
+            if (!jaExiste) {
+              notificacoes.push({
+                ridId: rid.firebaseId,
+                titulo: rid.titulo || 'RID sem título',
+                data: rid.ultimo_update || rid.data_criacao
+              });
+              console.log('🔔 Notificação existente carregada:', rid.titulo);
+            }
+          });
+          
+          // Atualizar badge de notificações
+          atualizarBadgeNotificacoes();
+        }
+        
+        currentData = rids;
+        
+        // Atualizar interface
+        if (currentUser) {
+          if (currentUser.tipo === 'admin') {
+            if (currentAdminSection === 'dashboard') {
+              const dashContent = $('admin-content');
+              if (dashContent) renderDashboard(dashContent);
+            } else if (currentAdminSection === 'rids') {
+              renderRidsList();
+            } else if (currentAdminSection === 'funcionarios') {
+              renderFuncionariosList();
+            }
+          } else {
+            renderFuncRidsList();
+          }
+        }
+      });
+      
+      // Listener para funcionários
+      funcionariosListener = window.escutarFuncionariosFirebase((funcionarios) => {
+        console.log('📡 Funcionários atualizados:', funcionarios.length);
+        currentFuncionarios = funcionarios;
+        
+        // Atualizar interface
+        if (currentUser && currentUser.tipo === 'admin' && currentAdminSection === 'funcionarios') {
+          renderFuncionariosList();
+        }
+      });
+      
+      console.log('✅ Sincronização Firebase ativada');
+    }
+    
+    // ============================================
+    // RENDER PRINCIPAL
+    // ============================================
+    function render() {
+      const root = $('app-root');
+      if (!root) return;
+      
+      root.innerHTML = `
+        <div id="message-container"></div>
+        <div id="app-container" style="width: 100%; height: 100%;"></div>
+      `;
+      
+      if (!currentUser) {
+        renderLogin();
+      } else if (currentUser.tipo === 'admin') {
+        renderAdminPanel();
+      } else {
+        renderFuncionarioPanel();
+      }
+    }
+    
+    // ============================================
+    // TELA DE LOGIN
+    // ============================================
+    let showCadastro = false;
+    
+    function renderLogin() {
+      const container = $('app-container');
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      container.innerHTML = `
+        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: ${config.background_color || defaultConfig.background_color};">
+          <div class="fade-in" style="width: 100%; max-width: 400px; padding: 20px;">
+            <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <h1 id="login-title" style="margin: 0 0 8px 0; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};"></h1>
+                <p id="login-subtitle" style="margin: 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};"></p>
+              </div>
+              
+              <!-- Formulário de Login -->
+              <form id="login-form" style="display: ${!showCadastro ? 'flex' : 'none'}; flex-direction: column; gap: 20px;">
+                <div>
+                  <label for="login-usuario" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Usuário</label>
+                  <div style="position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; color: ${config.text_color || defaultConfig.text_color};">${icons.user}</span>
+                    <input 
+                      id="login-usuario" 
+                      type="text" 
+                      placeholder="Digite seu usuário"
+                      style="width: 100%; padding: 12px 12px 12px 42px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label for="login-senha" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Senha</label>
+                  <div style="position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; color: ${config.text_color || defaultConfig.text_color};">${icons.lock}</span>
+                    <input 
+                      id="login-senha" 
+                      type="password" 
+                      placeholder="Digite sua senha"
+                      style="width: 100%; padding: 12px 12px 12px 42px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <button 
+                  id="btn-login" 
+                  type="submit"
+                  style="width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; background: ${config.primary_action_color || defaultConfig.primary_action_color}; color: #fff; transition: opacity 0.2s;"
+                  onmouseover="this.style.opacity='0.9'"
+                  onmouseout="this.style.opacity='1'"
+                >
+                  Entrar
+                </button>
+              </form>
+              
+              <!-- Botões de Navegação -->
+              <div style="display: ${!showCadastro ? 'block' : 'none'};">
+                <button 
+                  id="btn-ir-cadastro" 
+                  style="width: 100%; padding: 14px; margin-top: 12px; border: 2px solid ${config.primary_action_color || defaultConfig.primary_action_color}; background: transparent; color: ${config.primary_action_color || defaultConfig.primary_action_color}; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                  onmouseover="this.style.background='${config.primary_action_color || defaultConfig.primary_action_color}10'"
+                  onmouseout="this.style.background='transparent'"
+                >
+                  Cadastre-se
+                </button>
+              </div>
+              
+              <!-- Formulário de Cadastro -->
+              <form id="cadastro-form" style="display: ${showCadastro ? 'flex' : 'none'}; flex-direction: column; gap: 20px;">
+                <div>
+                  <label for="cadastro-nome" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Nome Completo</label>
+                  <div style="position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; color: ${config.text_color || defaultConfig.text_color};">${icons.user}</span>
+                    <input 
+                      id="cadastro-nome" 
+                      type="text" 
+                      placeholder="Digite seu nome completo"
+                      style="width: 100%; padding: 12px 12px 12px 42px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label for="cadastro-cpf" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">CPF</label>
+                  <div style="position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; color: ${config.text_color || defaultConfig.text_color};">${icons.user}</span>
+                    <input 
+                      id="cadastro-cpf" 
+                      type="text" 
+                      placeholder="000.000.000-00"
+                      maxlength="14"
+                      style="width: 100%; padding: 12px 12px 12px 42px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label for="cadastro-senha" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Senha</label>
+                  <div style="position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; color: ${config.text_color || defaultConfig.text_color};">${icons.lock}</span>
+                    <input 
+                      id="cadastro-senha" 
+                      type="password" 
+                      placeholder="Crie uma senha"
+                      style="width: 100%; padding: 12px 12px 12px 42px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label for="cadastro-confirma-senha" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Confirmar Senha</label>
+                  <div style="position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; color: ${config.text_color || defaultConfig.text_color};">${icons.lock}</span>
+                    <input 
+                      id="cadastro-confirma-senha" 
+                      type="password" 
+                      placeholder="Confirme sua senha"
+                      style="width: 100%; padding: 12px 12px 12px 42px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <button 
+                  id="btn-cadastro" 
+                  type="submit"
+                  style="width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; background: ${config.primary_action_color || defaultConfig.primary_action_color}; color: #fff; transition: opacity 0.2s;"
+                  onmouseover="this.style.opacity='0.9'"
+                  onmouseout="this.style.opacity='1'"
+                >
+                  <span id="btn-cadastro-text">Criar Conta</span>
+                </button>
+                
+                <button 
+                  id="btn-voltar-login" 
+                  type="button"
+                  style="width: 100%; padding: 14px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; background: transparent; color: ${config.text_color || defaultConfig.text_color}; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                  onmouseover="this.style.background='${config.background_color || defaultConfig.background_color}'"
+                  onmouseout="this.style.background='transparent'"
+                >
+                  Voltar ao Login
+                </button>
+              </form>
+              
+
+            </div>
+          </div>
+        </div>
+      `;
+      
+      applyConfigToLogin(config);
+      attachLoginListeners();
+    }
+    
+    function attachLoginListeners() {
+      // Botão Ir para Cadastro
+      const btnIrCadastro = $('btn-ir-cadastro');
+      if (btnIrCadastro) {
+        btnIrCadastro.addEventListener('click', () => {
+          showCadastro = true;
+          renderLogin();
+        });
+      }
+      
+      // Botão Voltar ao Login
+      const btnVoltarLogin = $('btn-voltar-login');
+      if (btnVoltarLogin) {
+        btnVoltarLogin.addEventListener('click', () => {
+          showCadastro = false;
+          renderLogin();
+        });
+      }
+      
+      // Formulário de Login
+      const loginForm = $('login-form');
+      if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const usuario = $('login-usuario').value.trim();
+          const senha = $('login-senha').value.trim();
+          const config = window.elementSdk?.config || defaultConfig;
+          
+          if (!usuario || !senha) {
+            showMessage('Preencha usuário e senha', 'error');
+            return;
+          }
+          
+          const adminUser = config.usuario_admin || defaultConfig.usuario_admin;
+          const adminPass = config.senha_admin || defaultConfig.senha_admin;
+          
+          if (usuario === adminUser && senha === adminPass) {
+            currentUser = { tipo: 'admin', nome: 'Administrador' };
+            showMessage('Login realizado com sucesso!', 'success');
+            render();
+          } else {
+            // Verificar se o usuário está cadastrado (usando CPF como usuário)
+            const cpfLimpo = usuario.replace(/\D/g, '');
+            const usuarioCadastrado = currentFuncionarios.find(u => 
+              u.cpf === cpfLimpo && 
+              u.senha === senha
+            );
+            
+            if (usuarioCadastrado) {
+              // Verificar se o CPF está na lista de administradores
+              if (cpfsAdministradores.includes(cpfLimpo)) {
+                currentUser = { tipo: 'admin', nome: usuarioCadastrado.nome_completo };
+                showMessage(`Bem-vindo, Administrador ${usuarioCadastrado.nome_completo}!`, 'success');
+              } else {
+                currentUser = { tipo: 'funcionario', nome: usuarioCadastrado.nome_completo };
+                showMessage(`Bem-vindo, ${usuarioCadastrado.nome_completo}!`, 'success');
+              }
+              render();
+            } else {
+              showMessage('CPF ou senha incorretos', 'error');
+            }
+          }
+        });
+      }
+      
+      // Máscara de CPF
+      const cpfInput = $('cadastro-cpf');
+      if (cpfInput) {
+        cpfInput.addEventListener('input', (e) => {
+          let value = e.target.value.replace(/\D/g, '');
+          if (value.length > 11) value = value.slice(0, 11);
+          
+          if (value.length > 9) {
+            value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+          } else if (value.length > 6) {
+            value = value.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+          } else if (value.length > 3) {
+            value = value.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+          }
+          
+          e.target.value = value;
+        });
+      }
+      
+      // Formulário de Cadastro
+      const cadastroForm = $('cadastro-form');
+      if (cadastroForm) {
+        cadastroForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          if (!window.salvarFuncionarioFirebase) {
+            showMessage('Sistema de dados não disponível', 'error');
+            return;
+          }
+          
+          const nomeCompleto = $('cadastro-nome').value.trim();
+          const cpf = $('cadastro-cpf').value.trim().replace(/\D/g, '');
+          const senha = $('cadastro-senha').value.trim();
+          const confirmaSenha = $('cadastro-confirma-senha').value.trim();
+          
+          if (!nomeCompleto || !cpf || !senha || !confirmaSenha) {
+            showMessage('Preencha todos os campos', 'error');
+            return;
+          }
+          
+          if (cpf.length !== 11) {
+            showMessage('CPF deve conter 11 dígitos', 'error');
+            return;
+          }
+          
+          if (senha !== confirmaSenha) {
+            showMessage('As senhas não coincidem', 'error');
+            return;
+          }
+          
+          if (senha.length < 4) {
+            showMessage('A senha deve ter pelo menos 4 caracteres', 'error');
+            return;
+          }
+          
+          // Verificar se o CPF j�� existe
+          const cpfExiste = currentFuncionarios.find(u => u.cpf === cpf);
+          
+          if (cpfExiste) {
+            showMessage('Este CPF já está cadastrado', 'error');
+            return;
+          }
+          
+          const btnCadastro = $('btn-cadastro');
+          const btnText = $('btn-cadastro-text');
+          if (btnCadastro && btnText) {
+            btnCadastro.disabled = true;
+            btnText.innerHTML = '<div class="spinner"></div>';
+          }
+          
+          try {
+            await window.salvarFuncionarioFirebase({
+              nome_completo: nomeCompleto,
+              cpf: cpf,
+              senha: senha
+            });
+            
+            // Verificar se �� um CPF administrativo
+            if (cpfsAdministradores.includes(cpf)) {
+              showMessage('Conta de administrador criada com sucesso! Faça login para continuar.', 'success');
+            } else {
+              showMessage('Conta criada com sucesso! Faça login para continuar.', 'success');
+            }
+            
+            showCadastro = false;
+            renderLogin();
+          } catch (error) {
+            showMessage('Erro ao criar conta', 'error');
+          } finally {
+            if (btnCadastro && btnText) {
+              btnCadastro.disabled = false;
+              btnText.textContent = 'Criar Conta';
+            }
+          }
+        });
+      }
+    }
+    
+    // ============================================
+    // PAINEL ADMINISTRATIVO
+    // ============================================
+    function renderAdminPanel() {
+      const container = $('app-container');
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      container.innerHTML = `
+        <div style="width: 100%; height: 100%; display: flex; flex-direction: column; background: ${config.background_color || defaultConfig.background_color};">
+          <!-- Header -->
+          <header style="background: ${config.surface_color || defaultConfig.surface_color}; border-bottom: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; padding: 16px 32px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <h2 id="admin-sidebar-title" style="margin: 0; font-size: 18px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};"></h2>
+                <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.6; color: ${config.text_color || defaultConfig.text_color};">Painel Administrativo</p>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <button id="btn-notificacoes" style="position: relative; padding: 10px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; background: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: ${config.text_color || defaultConfig.text_color}; transition: background 0.2s;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                  <span id="notif-badge" style="display: none; position: absolute; top: -4px; right: -4px; background: #dc2626; color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: 700; min-width: 18px; text-align: center;"></span>
+                </button>
+                <button id="btn-logout" style="padding: 10px 16px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; background: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color}; transition: background 0.2s;">
+                  ${icons.logout}
+                  <span>Sair</span>
+                </button>
+              </div>
+            </div>
+          </header>
+          
+          <!-- Navigation Bar -->
+          <nav style="background: ${config.surface_color || defaultConfig.surface_color}; border-bottom: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; padding: 0 32px; display: flex; gap: 4px;">
+            <button id="nav-dashboard" class="nav-item" data-section="dashboard" style="padding: 14px 20px; border: none; background: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color}; transition: all 0.2s; border-bottom: 3px solid transparent; position: relative;">
+              ${icons.dashboard}
+              <span>Dashboard</span>
+            </button>
+            <button id="nav-rids" class="nav-item" data-section="rids" style="padding: 14px 20px; border: none; background: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color}; transition: all 0.2s; border-bottom: 3px solid transparent; position: relative;">
+              ${icons.file}
+              <span>RIDs</span>
+            </button>
+            <button id="nav-funcionarios" class="nav-item" data-section="funcionarios" style="padding: 14px 20px; border: none; background: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color}; transition: all 0.2s; border-bottom: 3px solid transparent; position: relative;">
+              ${icons.users}
+              <span>Funcionários</span>
+            </button>
+            <button id="nav-relatorio" class="nav-item" data-section="relatorio" style="padding: 14px 20px; border: none; background: none; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color}; transition: all 0.2s; border-bottom: 3px solid transparent; position: relative;">
+              ${icons.chart}
+              <span>Relatórios</span>
+            </button>
+          </nav>
+          
+          <!-- Main Content -->
+          <main style="flex: 1; overflow-y: auto; height: 100%;" class="scrollable">
+            <div id="admin-content" style="padding: 32px; max-width: 1200px; margin: 0 auto;"></div>
+          </main>
+        </div>
+      `;
+      
+      applyConfigToAdminPanel(config);
+      attachAdminListeners();
+      renderAdminSection();
+    }
+    
+    function attachAdminListeners() {
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        item.addEventListener('click', () => {
+          currentAdminSection = item.dataset.section;
+          renderAdminSection();
+          updateActiveNav();
+        });
+      });
+      
+      const btnNotificacoes = $('btn-notificacoes');
+      if (btnNotificacoes) {
+        btnNotificacoes.addEventListener('click', () => {
+          abrirModalNotificacoes();
+        });
+      }
+      
+      const btnLogout = $('btn-logout');
+      if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+          currentUser = null;
+          currentAdminSection = 'dashboard';
+          notificacoes = [];
+          notificacoesLidas.clear();
+          showMessage('Logout realizado com sucesso', 'info');
+          render();
+        });
+      }
+      
+      updateActiveNav();
+    }
+    
+    function updateActiveNav() {
+      const config = window.elementSdk?.config || defaultConfig;
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        if (item.dataset.section === currentAdminSection) {
+          item.style.borderBottomColor = config.primary_action_color || defaultConfig.primary_action_color;
+          item.style.color = config.primary_action_color || defaultConfig.primary_action_color;
+          item.style.background = 'none';
+        } else {
+          item.style.borderBottomColor = 'transparent';
+          item.style.color = config.text_color || defaultConfig.text_color;
+          item.style.background = 'none';
+        }
+      });
+    }
+    
+    function renderAdminSection() {
+      const content = $('admin-content');
+      if (!content) return;
+      
+      if (currentAdminSection === 'dashboard') {
+        renderDashboard(content);
+      } else if (currentAdminSection === 'rids') {
+        renderRidsSection(content);
+      } else if (currentAdminSection === 'funcionarios') {
+        renderFuncionariosSection(content);
+      } else if (currentAdminSection === 'relatorio') {
+        renderRelatorioSection(content);
+      }
+    }
+    
+    // ============================================
+    // DASHBOARD
+    // ============================================
+    function renderDashboard(content) {
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      const total = currentData.length;
+      const abertos = currentData.filter(r => r.status === 'Em aberto').length;
+      const emAnalise = currentData.filter(r => r.status === 'Vencidos').length;
+      const fechados = currentData.filter(r => r.status === 'Corrigidos').length;
+      
+      content.innerHTML = `
+        <div class="fade-in">
+          <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Dashboard</h1>
+          <p style="margin: 0 0 32px 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Visão geral do sistema</p>
+          
+          <!-- Cards de estatísticas -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px;">
+            <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 13px; opacity: 0.6; color: ${config.text_color || defaultConfig.text_color};">Total de RIDs</span>
+                <span style="color: ${config.primary_action_color || defaultConfig.primary_action_color};">${icons.file}</span>
+              </div>
+              <div style="font-size: 32px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color};">${total}</div>
+            </div>
+            
+            <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 13px; opacity: 0.6; color: ${config.text_color || defaultConfig.text_color};">Em aberto</span>
+                <span style="color: #ff6b6b;">${icons.file}</span>
+              </div>
+              <div style="font-size: 32px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color};">${abertos}</div>
+            </div>
+            
+            <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 13px; opacity: 0.6; color: ${config.text_color || defaultConfig.text_color};">Vencidos</span>
+                <span style="color: ${config.primary_action_color || defaultConfig.primary_action_color};">${icons.file}</span>
+              </div>
+              <div style="font-size: 32px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color};">${emAnalise}</div>
+            </div>
+            
+            <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 13px; opacity: 0.6; color: ${config.text_color || defaultConfig.text_color};">Corrigidos</span>
+                <span style="color: #51cf66;">${icons.check}</span>
+              </div>
+              <div style="font-size: 32px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color};">${fechados}</div>
+            </div>
+          </div>
+          
+          <!-- ��ltimos RIDs -->
+          <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px;">
+            <h2 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">RIDs Registrados Esta Semana</h2>
+            
+            <!-- Cabeçalho das colunas -->
+            <div style="display: grid; grid-template-columns: 80px 2fr 1.5fr 1.2fr 1fr; gap: 16px; padding: 12px 16px; background: ${config.background_color || defaultConfig.background_color}; border-radius: 8px; margin-bottom: 12px;">
+              <div style="font-size: 12px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">ID</div>
+              <div style="font-size: 12px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">Assunto</div>
+              <div style="font-size: 12px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">Funcionário</div>
+              <div style="font-size: 12px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">Data</div>
+              <div style="font-size: 12px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">Status</div>
+            </div>
+            
+            <div id="dashboard-recent-rids" style="max-height: 300px; overflow-y: auto;" class="scrollable"></div>
+          </div>
+          
+          <!-- Top 3 Funcionários do Mês -->
+          <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <h2 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Top 3 Funcionários com Mais RIDs</h2>
+            
+            <!-- Cabeçalho das colunas -->
+            <div style="display: grid; grid-template-columns: 100px 2fr 1.5fr 1fr 1.5fr; gap: 16px; padding: 12px 16px; background: ${config.background_color || defaultConfig.background_color}; border-radius: 8px; margin-bottom: 12px;">
+              <div style="font-size: 12px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">Posição</div>
+              <div style="font-size: 12px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">Funcionário</div>
+              <div style="font-size: 12px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">Departamento</div>
+              <div style="font-size: 12px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">Total RIDs</div>
+              <div style="font-size: 12px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">Última Atualização</div>
+            </div>
+            
+            <div id="dashboard-top-funcionarios" style="max-height: 300px; overflow-y: auto;" class="scrollable"></div>
+          </div>
+        </div>
+      `;
+      
+      renderDashboardRecentRids();
+      renderDashboardTopFuncionarios();
+    }
+    
+    function renderDashboardTopFuncionarios() {
+      const container = $('dashboard-top-funcionarios');
+      if (!container) return;
+      
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      // Contar RIDs por funcionário e obter última atualização
+      const contagemPorFuncionario = {};
+      currentData.forEach(r => {
+        if (r.nome_funcionario) {
+          if (!contagemPorFuncionario[r.nome_funcionario]) {
+            contagemPorFuncionario[r.nome_funcionario] = {
+              count: 0,
+              ultimaAtualizacao: r.ultimo_update || r.data_criacao
+            };
+          }
+          contagemPorFuncionario[r.nome_funcionario].count++;
+          
+          // Atualizar para a data mais recente
+          const dataAtual = new Date(r.ultimo_update || r.data_criacao);
+          const dataArmazenada = new Date(contagemPorFuncionario[r.nome_funcionario].ultimaAtualizacao);
+          if (dataAtual > dataArmazenada) {
+            contagemPorFuncionario[r.nome_funcionario].ultimaAtualizacao = r.ultimo_update || r.data_criacao;
+          }
+        }
+      });
+      
+      // Converter para array e ordenar
+      const ranking = Object.entries(contagemPorFuncionario)
+        .map(([nome, data]) => ({ 
+          nome, 
+          count: data.count,
+          ultimaAtualizacao: data.ultimaAtualizacao
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
+      
+      if (ranking.length === 0) {
+        container.innerHTML = `<p style="opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Nenhum RID registrado ainda</p>`;
+        return;
+      }
+      
+      const medals = [
+        `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>`,
+        `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C0C0C0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>`,
+        `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#CD7F32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>`
+      ];
+      const departamentos = ['Produção', 'Manutenção', 'Qualidade'];
+      
+      container.innerHTML = ranking.map((func, index) => {
+        const dataFormatada = new Date(func.ultimaAtualizacao).toLocaleDateString('pt-BR', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        const departamento = departamentos[index % departamentos.length];
+        
+        return `
+        <div style="display: grid; grid-template-columns: 100px 2fr 1.5fr 1fr 1.5fr; gap: 16px; padding: 14px 16px; border-bottom: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}20; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>${medals[index]}</span>
+            <span style="font-size: 13px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">${index + 1}º</span>
+          </div>
+          <div style="font-size: 13px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">${func.nome}</div>
+          <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color};">${departamento}</div>
+          <div style="font-size: 13px; font-weight: 700; color: ${config.primary_action_color || defaultConfig.primary_action_color};">${func.count}</div>
+          <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">${dataFormatada}</div>
+        </div>
+      `;
+      }).join('');
+    }
+    
+    function renderDashboardRecentRids() {
+      const container = $('dashboard-recent-rids');
+      if (!container) return;
+      
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      // Calcular início da semana (domingo)
+      const hoje = new Date();
+      const diaSemana = hoje.getDay();
+      const inicioSemana = new Date(hoje);
+      inicioSemana.setDate(hoje.getDate() - diaSemana);
+      inicioSemana.setHours(0, 0, 0, 0);
+      
+      // Filtrar RIDs da semana atual
+      const ridsDaSemana = currentData.filter(r => {
+        const dataRid = new Date(r.data_criacao);
+        return dataRid >= inicioSemana;
+      });
+      
+      const recent = ridsDaSemana.slice().sort((a, b) => 
+        new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime()
+      );
+      
+      if (recent.length === 0) {
+        container.innerHTML = `<p style="opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color}; padding: 20px; text-align: center;">Nenhum RID registrado esta semana</p>`;
+        return;
+      }
+      
+      container.innerHTML = recent.map((r, index) => {
+        const dataFormatada = new Date(r.data_criacao).toLocaleDateString('pt-BR', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric' 
+        });
+        
+        return `
+        <div style="display: grid; grid-template-columns: 80px 2fr 1.5fr 1.2fr 1fr; gap: 16px; padding: 14px 16px; border-bottom: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}20; align-items: center;">
+          <div style="font-size: 13px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">#${String(index + 1).padStart(3, '0')}</div>
+          <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.titulo || 'Sem título'}</div>
+          <div style="font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">${r.nome_funcionario || '-'}</div>
+          <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">${dataFormatada}</div>
+          <div>
+            <span style="padding: 4px 12px; background: ${getStatusColor(r.status, config)}20; color: ${getStatusColor(r.status, config)}; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; display: inline-block;">
+              ${r.status}
+            </span>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+    
+    function getStatusColor(status, config) {
+      if (status === 'Em aberto') return '#ff6b6b';
+      if (status === 'Vencidos') return config.primary_action_color || defaultConfig.primary_action_color;
+      return '#51cf66';
+    }
+    
+    function getRiscoColor(risco) {
+      if (risco === 'Crítico') return '#dc2626';
+      if (risco === 'Alto') return '#ea580c';
+      if (risco === 'Médio') return '#f59e0b';
+      if (risco === 'Baixo') return '#10b981';
+      return '#6b7280';
+    }
+    
+    function abrirModalNotificacoes() {
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      // Criar modal
+      const modal = document.createElement('div');
+      modal.id = 'modal-notificacoes';
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      `;
+      
+      const naoLidas = notificacoes.filter(n => !notificacoesLidas.has(n.ridId));
+      
+      modal.innerHTML = `
+        <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 16px; padding: 32px; width: 100%; max-width: 600px; max-height: 80%; overflow-y: auto;" class="scrollable">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <h2 style="margin: 0; font-size: 22px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">
+              Notificações ${naoLidas.length > 0 ? `(${naoLidas.length})` : ''}
+            </h2>
+            <button id="btn-fechar-modal-notif" style="width: 32px; height: 32px; border: none; background: ${config.secondary_action_color || defaultConfig.secondary_action_color}20; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: ${config.text_color || defaultConfig.text_color};">
+              ${icons.x}
+            </button>
+          </div>
+          
+          <div id="lista-notificacoes" style="display: flex; flex-direction: column; gap: 12px;">
+            ${notificacoes.length === 0 ? `
+              <div style="padding: 40px; text-align: center;">
+                <p style="margin: 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Nenhuma notificação</p>
+              </div>
+            ` : notificacoes.slice().reverse().map(notif => {
+              const rid = currentData.find(r => r.firebaseId === notif.ridId);
+              const ridNumero = currentData.findIndex(r => r.firebaseId === notif.ridId) + 1;
+              const isLida = notificacoesLidas.has(notif.ridId);
+              const dataFormatada = new Date(notif.data).toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              
+              return `
+                <div 
+                  class="notif-item" 
+                  data-rid-id="${notif.ridId}"
+                  style="padding: 16px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: ${isLida ? 'transparent' : config.primary_action_color + '10'};"
+                  onmouseover="this.style.background='${config.background_color || defaultConfig.background_color}'"
+                  onmouseout="this.style.background='${isLida ? 'transparent' : config.primary_action_color + '10'}'"
+                >
+                  <div style="display: flex; align-items: start; gap: 12px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: ${config.primary_action_color || defaultConfig.primary_action_color}20; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${config.primary_action_color || defaultConfig.primary_action_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    </div>
+                    <div style="flex: 1;">
+                      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <span style="font-size: 14px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">RID #${String(ridNumero).padStart(3, '0')}</span>
+                        ${!isLida ? `<span style="width: 8px; height: 8px; border-radius: 50%; background: ${config.primary_action_color || defaultConfig.primary_action_color};"></span>` : ''}
+                      </div>
+                      <p style="margin: 0 0 8px 0; font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.8;">${notif.titulo}</p>
+                      <div style="font-size: 12px; opacity: 0.6; color: ${config.text_color || defaultConfig.text_color};">${dataFormatada}</div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          
+          ${notificacoes.length > 0 ? `
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30;">
+              <button id="btn-marcar-todas-lidas" style="width: 100%; padding: 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; color: ${config.text_color || defaultConfig.text_color}; transition: background 0.2s;">
+                Marcar todas como lidas
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Event listeners
+      const btnFechar = modal.querySelector('#btn-fechar-modal-notif');
+      if (btnFechar) {
+        btnFechar.addEventListener('click', () => {
+          modal.remove();
+        });
+      }
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+      
+      // Marcar todas como lidas
+      const btnMarcarLidas = modal.querySelector('#btn-marcar-todas-lidas');
+      if (btnMarcarLidas) {
+        btnMarcarLidas.addEventListener('click', () => {
+          notificacoes.forEach(n => notificacoesLidas.add(n.ridId));
+          atualizarBadgeNotificacoes();
+          modal.remove();
+          showMessage('Todas as notificações foram marcadas como lidas', 'success');
+        });
+      }
+      
+      // Clicar em notificação
+      const notifItems = modal.querySelectorAll('.notif-item');
+      notifItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const ridId = item.dataset.ridId;
+          notificacoesLidas.add(ridId);
+          atualizarBadgeNotificacoes();
+          modal.remove();
+          abrirModalEdicaoRid(ridId);
+        });
+      });
+    }
+    
+    // ============================================
+    // SEÇÃO RIDs (SIMPLIFICADA)
+    // ============================================
+    function renderRidsSection(content) {
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      content.innerHTML = `
+        <div class="fade-in">
+          <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Gestão de RIDs</h1>
+          <p style="margin: 0 0 32px 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Todos os RIDs registrados</p>
+          
+          <div id="rids-list-container"></div>
+        </div>
+      `;
+      
+      renderRidsList();
+    }
+    
+    function renderRidsList() {
+      const container = $('rids-list-container');
+      if (!container) return;
+      
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      if (currentData.length === 0) {
+        container.innerHTML = `
+          <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 60px 40px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <p style="margin: 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Nenhum RID encontrado</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = `
+        <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden;">
+          <!-- Cabeçalho da Tabela -->
+          <div style="display: grid; grid-template-columns: 80px 1.5fr 1fr 1.2fr 2fr 1fr 1fr 1fr; gap: 12px; padding: 16px 20px; background: ${config.background_color || defaultConfig.background_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30;">
+            <div style="font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">ID</div>
+            <div style="font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">Emitente</div>
+            <div style="font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">Setor</div>
+            <div style="font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">Local</div>
+            <div style="font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">Descrição</div>
+            <div style="font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">Risco</div>
+            <div style="font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">Data</div>
+            <div style="font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">Status</div>
+          </div>
+          
+          <!-- Linhas da Tabela -->
+          ${currentData.map((r, index) => {
+            const dataFormatada = new Date(r.data_criacao).toLocaleDateString('pt-BR', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: 'numeric'
+            });
+            const ridNumero = String(index + 1).padStart(3, '0');
+            
+            return `
+            <div class="rid-item" data-rid-id="${r.firebaseId}" style="display: grid; grid-template-columns: 80px 1.5fr 1fr 1.2fr 2fr 1fr 1fr 1fr; gap: 12px; padding: 16px 20px; border-bottom: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}20; cursor: pointer; transition: background 0.2s; align-items: center;" onmouseover="this.style.background='${config.background_color || defaultConfig.background_color}'" onmouseout="this.style.background='transparent'">
+              <div style="font-size: 13px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">#${ridNumero}</div>
+              <div style="font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.emitente || '-'}</div>
+              <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.setor || '-'}</div>
+              <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.local_ocorrencia || '-'}</div>
+              <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.descricao || 'Sem descrição'}">${r.descricao || 'Sem descrição'}</div>
+              <div>
+                <span style="padding: 4px 10px; background: ${getRiscoColor(r.classificacao_risco || 'Não definido')}20; color: ${getRiscoColor(r.classificacao_risco || 'Não definido')}; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; display: inline-block;">
+                  ${r.classificacao_risco || '-'}
+                </span>
+              </div>
+              <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">${dataFormatada}</div>
+              <div>
+                <span style="padding: 4px 10px; background: ${getStatusColor(r.status, config)}20; color: ${getStatusColor(r.status, config)}; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; display: inline-block;">
+                  ${r.status}
+                </span>
+              </div>
+            </div>
+          `;
+          }).join('')}
+        </div>
+      `;
+      
+      // Adicionar event listeners aos itens de RID
+      const ridItems = container.querySelectorAll('.rid-item');
+      ridItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const ridId = item.dataset.ridId;
+          abrirModalEdicaoRid(ridId);
+        });
+      });
+    }
+    
+    function abrirModalEdicaoRid(ridId) {
+      const rid = currentData.find(r => r.firebaseId === ridId);
+      if (!rid) return;
+      
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      // Criar modal
+      const modal = document.createElement('div');
+      modal.id = 'modal-edicao-rid';
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      `;
+      
+      const dataOcorrencia = rid.data_ocorrencia || '';
+      const prazoConclusao = rid.prazo_conclusao || '';
+      const dataConclusao = rid.data_conclusao || '';
+      
+      modal.innerHTML = `
+        <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 16px; padding: 32px; width: 100%; max-width: 800px; max-height: 90%; overflow-y: auto;" class="scrollable">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <h2 style="margin: 0; font-size: 22px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Editar RID</h2>
+            <button id="btn-fechar-modal-rid" style="width: 32px; height: 32px; border: none; background: ${config.secondary_action_color || defaultConfig.secondary_action_color}20; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: ${config.text_color || defaultConfig.text_color};">
+              ${icons.x}
+            </button>
+          </div>
+          
+          <form id="form-editar-rid" style="display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- Unidade (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Unidade</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${rid.unidade || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Emitente (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Emitente</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${rid.emitente || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Tipo de Contrato (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Tipo de Contrato</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${rid.tipo_contrato || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Setor (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Setor</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${rid.setor || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Data da Ocorrência (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Data da Ocorrência</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${dataOcorrencia ? new Date(dataOcorrencia).toLocaleDateString('pt-BR') : 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Incidente (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Incidente ou Desvios</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${rid.incidente || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Origem da Detecção (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Origem da Detecção</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${rid.origem_deteccao || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Local da Ocorrência (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Local da Ocorrência</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${rid.local_ocorrencia || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Descrição (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Descrição da Ocorrência</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7; min-height: 80px; white-space: pre-wrap;">${rid.descricao || 'Não informado'}</div>
+            </div>
+            
+            <!-- Classificação de Risco (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Classificação de Risco</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${rid.classificacao_risco || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Ação Imediata (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Ação Imediata</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7; min-height: 60px;">
+                ${rid.acao_imediata || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Ações Corretivas (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Aç����es Corretivas</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7; min-height: 60px;">
+                ${rid.acoes_corretivas || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Responsável pelas Ações (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Responsável pelas Ações</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${rid.responsavel_acoes || 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Prazo para Conclusão (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Prazo para Conclusão</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${prazoConclusao ? new Date(prazoConclusao).toLocaleDateString('pt-BR') : 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Data da Conclusão (Somente Leitura) -->
+            <div>
+              <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Data da Conclusão</label>
+              <div style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.background_color || defaultConfig.background_color}; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">
+                ${dataConclusao ? new Date(dataConclusao).toLocaleDateString('pt-BR') : 'Não informado'}
+              </div>
+            </div>
+            
+            <!-- Divisor -->
+            <div style="border-top: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; margin: 20px 0;"></div>
+            
+            <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Campos Editáveis</h3>
+            
+            <!-- Status (EDIT��VEL) -->
+            <div>
+              <label for="edit-rid-status" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Status</label>
+              <select id="edit-rid-status" style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};">
+                <option value="Em aberto" ${rid.status === 'Em aberto' ? 'selected' : ''}>Em aberto</option>
+                <option value="Vencidos" ${rid.status === 'Vencidos' ? 'selected' : ''}>Vencidos</option>
+                <option value="Corrigidos" ${rid.status === 'Corrigidos' ? 'selected' : ''}>Corrigidos</option>
+              </select>
+            </div>
+            
+            <!-- Classificação de Risco (EDITÁVEL) -->
+            <div>
+              <label for="edit-rid-risco" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Classificação de Risco</label>
+              <select id="edit-rid-risco" style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};">
+                <option value="">Selecione...</option>
+                <option value="Baixo" ${rid.classificacao_risco === 'Baixo' ? 'selected' : ''}>Baixo</option>
+                <option value="Médio" ${rid.classificacao_risco === 'Médio' ? 'selected' : ''}>Médio</option>
+                <option value="Alto" ${rid.classificacao_risco === 'Alto' ? 'selected' : ''}>Alto</option>
+                <option value="Crítico" ${rid.classificacao_risco === 'Crítico' ? 'selected' : ''}>Crítico</option>
+              </select>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+              <button type="button" id="btn-designar-rid" style="padding: 12px 20px; border: 2px solid ${config.primary_action_color || defaultConfig.primary_action_color}; background: transparent; color: ${config.primary_action_color || defaultConfig.primary_action_color}; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                ${icons.user}
+                <span>Designar</span>
+              </button>
+              <div style="flex: 1;"></div>
+              <button type="button" id="btn-cancelar-edicao-rid" style="padding: 12px 20px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; color: ${config.text_color || defaultConfig.text_color};">
+                Cancelar
+              </button>
+              <button type="submit" id="btn-salvar-edicao-rid" style="padding: 12px 20px; border: none; background: ${config.primary_action_color || defaultConfig.primary_action_color}; color: #fff; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                <span id="btn-salvar-edicao-text">Salvar Alterações</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Event listeners
+      const btnFechar = modal.querySelector('#btn-fechar-modal-rid');
+      const btnCancelar = modal.querySelector('#btn-cancelar-edicao-rid');
+      const btnDesignar = modal.querySelector('#btn-designar-rid');
+      const form = modal.querySelector('#form-editar-rid');
+      
+      const fecharModal = () => {
+        modal.remove();
+      };
+      
+      btnFechar.addEventListener('click', fecharModal);
+      btnCancelar.addEventListener('click', fecharModal);
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) fecharModal();
+      });
+      
+      // Designar RID
+      btnDesignar.addEventListener('click', async () => {
+        // Modal de designação
+        const modalDesignar = document.createElement('div');
+        modalDesignar.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.7);
+          z-index: 10001;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `;
+        
+        modalDesignar.innerHTML = `
+          <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
+            <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Designar Responsável</h3>
+            <p style="margin: 0 0 24px 0; font-size: 14px; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.8;">
+              Selecione o responsável pelas ações corretivas deste RID:
+            </p>
+            
+            <form id="form-designar-rid" style="display: flex; flex-direction: column; gap: 20px;">
+              <div>
+                <label for="designar-responsavel" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Responsável pelas Ações</label>
+                <select 
+                  id="designar-responsavel" 
+                  required
+                  style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};"
+                >
+                  <option value="">Selecione um administrador...</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="designar-acoes" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Ações Corretivas</label>
+                <textarea 
+                  id="designar-acoes" 
+                  rows="4"
+                  placeholder="Descreva as ações corretivas necessárias"
+                  required
+                  style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; resize: vertical; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};"
+                >${rid.acoes_corretivas || ''}</textarea>
+              </div>
+              
+              <div>
+                <label for="designar-prazo" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">Prazo para Conclusão</label>
+                <input 
+                  id="designar-prazo" 
+                  type="date" 
+                  value="${rid.prazo_conclusao || ''}"
+                  required
+                  style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};" 
+                />
+              </div>
+              
+              <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <button type="button" id="btn-cancelar-designar" style="flex: 1; padding: 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; color: ${config.text_color || defaultConfig.text_color};">
+                  Cancelar
+                </button>
+                <button type="submit" id="btn-confirmar-designar" style="flex: 1; padding: 12px; border: none; background: ${config.primary_action_color || defaultConfig.primary_action_color}; color: #fff; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                  Designar
+                </button>
+              </div>
+            </form>
+          </div>
+        `;
+        
+        document.body.appendChild(modalDesignar);
+        
+        // Popular select com administradores
+        const selectResponsavel = modalDesignar.querySelector('#designar-responsavel');
+        const administradores = currentFuncionarios.filter(func => 
+          cpfsAdministradores.includes(func.cpf)
+        );
+        
+        administradores.forEach(admin => {
+          const option = document.createElement('option');
+          option.value = admin.nome_completo;
+          option.textContent = admin.nome_completo;
+          if (rid.responsavel_acoes === admin.nome_completo) {
+            option.selected = true;
+          }
+          selectResponsavel.appendChild(option);
+        });
+        
+        const btnCancelarDesignar = modalDesignar.querySelector('#btn-cancelar-designar');
+        const formDesignar = modalDesignar.querySelector('#form-designar-rid');
+        
+        btnCancelarDesignar.addEventListener('click', () => {
+          modalDesignar.remove();
+        });
+        
+        formDesignar.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          if (!window.atualizarRIDFirebase) {
+            showMessage('Sistema de dados não disponível', 'error');
+            return;
+          }
+          
+          const btnConfirmarDesignar = modalDesignar.querySelector('#btn-confirmar-designar');
+          btnConfirmarDesignar.disabled = true;
+          btnConfirmarDesignar.textContent = 'Designando...';
+          
+          try {
+            const responsavel = modalDesignar.querySelector('#designar-responsavel').value.trim();
+            const acoes = modalDesignar.querySelector('#designar-acoes').value.trim();
+            const prazo = modalDesignar.querySelector('#designar-prazo').value;
+            
+            await window.atualizarRIDFirebase(ridId, {
+              responsavel_acoes: responsavel,
+              acoes_corretivas: acoes,
+              prazo_conclusao: prazo
+            });
+            
+            showMessage('Responsável designado com sucesso!', 'success');
+            modalDesignar.remove();
+            fecharModal();
+          } catch (error) {
+            showMessage('Erro ao designar responsável', 'error');
+            btnConfirmarDesignar.disabled = false;
+            btnConfirmarDesignar.textContent = 'Designar';
+          }
+        });
+      });
+      
+      // Salvar edição
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!window.atualizarRIDFirebase) {
+          showMessage('Sistema de dados não disponível', 'error');
+          return;
+        }
+        
+        const btnSalvar = modal.querySelector('#btn-salvar-edicao-rid');
+        const btnText = modal.querySelector('#btn-salvar-edicao-text');
+        
+        btnSalvar.disabled = true;
+        btnText.innerHTML = '<div class="spinner"></div>';
+        
+        try {
+          const updates = {
+            status: modal.querySelector('#edit-rid-status').value,
+            classificacao_risco: modal.querySelector('#edit-rid-risco').value
+          };
+          
+          await window.atualizarRIDFirebase(ridId, updates);
+          showMessage('RID atualizado com sucesso!', 'success');
+          fecharModal();
+        } catch (error) {
+          showMessage('Erro ao atualizar RID', 'error');
+        } finally {
+          btnSalvar.disabled = false;
+          btnText.textContent = 'Salvar Alterações';
+        }
+      });
+    }
+    
+    // ============================================
+    // SEÇÃO FUNCIONÁRIOS
+    // ============================================
+    function renderFuncionariosSection(content) {
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      content.innerHTML = `
+        <div class="fade-in">
+          <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Funcionários</h1>
+          <p style="margin: 0 0 32px 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Lista de funcion��rios cadastrados</p>
+          
+          <div id="funcionarios-list-container"></div>
+        </div>
+      `;
+      
+      renderFuncionariosList();
+    }
+    
+    async function deletarFuncionario(funcId, funcNome) {
+      if (!window.deletarFuncionarioFirebase) {
+        showMessage('Sistema de dados não disponível', 'error');
+        return;
+      }
+      
+      // Criar modal de confirmação inline
+      const config = window.elementSdk?.config || defaultConfig;
+      const modalConfirm = document.createElement('div');
+      modalConfirm.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+      
+      modalConfirm.innerHTML = `
+        <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 32px; max-width: 400px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
+          <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Confirmar exclusão</h3>
+          <p style="margin: 0 0 24px 0; font-size: 14px; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.8;">
+            Tem certeza que deseja deletar o funcionário <strong>${funcNome}</strong>? Esta ação não pode ser desfeita.
+          </p>
+          <div style="display: flex; gap: 12px;">
+            <button id="btn-cancelar-delete" style="flex: 1; padding: 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; color: ${config.text_color || defaultConfig.text_color};">
+              Cancelar
+            </button>
+            <button id="btn-confirmar-delete" style="flex: 1; padding: 12px; border: none; background: #dc2626; color: #fff; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+              Deletar
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modalConfirm);
+      
+      const btnCancelar = modalConfirm.querySelector('#btn-cancelar-delete');
+      const btnConfirmar = modalConfirm.querySelector('#btn-confirmar-delete');
+      
+      btnCancelar.addEventListener('click', () => {
+        modalConfirm.remove();
+      });
+      
+      btnConfirmar.addEventListener('click', async () => {
+        btnConfirmar.disabled = true;
+        btnConfirmar.textContent = 'Deletando...';
+        
+        try {
+          await window.deletarFuncionarioFirebase(funcId);
+          showMessage('Funcionário deletado com sucesso', 'success');
+          modalConfirm.remove();
+        } catch (error) {
+          showMessage('Erro ao deletar funcionário', 'error');
+          btnConfirmar.disabled = false;
+          btnConfirmar.textContent = 'Deletar';
+        }
+      });
+    }
+    
+    function renderFuncionariosList() {
+      const container = $('funcionarios-list-container');
+      if (!container) return;
+      
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      if (currentFuncionarios.length === 0) {
+        container.innerHTML = `
+          <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 60px 40px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <p style="margin: 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Nenhum funcionário cadastrado ainda</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const departamentos = ['Produção', 'Manutenção', 'Qualidade', 'Administração', 'Logística'];
+      
+      // Contar RIDs por funcionário
+      const ridsCount = {};
+      currentData.forEach(rid => {
+        if (rid.nome_funcionario) {
+          ridsCount[rid.nome_funcionario] = (ridsCount[rid.nome_funcionario] || 0) + 1;
+        }
+      });
+      
+      container.innerHTML = `
+        <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden;">
+          <!-- Cabeçalho da Tabela -->
+          <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 1fr 60px; gap: 16px; padding: 16px 24px; background: ${config.background_color || defaultConfig.background_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30;">
+            <div style="font-size: 13px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">Nome</div>
+            <div style="font-size: 13px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">CPF</div>
+            <div style="font-size: 13px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">Departamento</div>
+            <div style="font-size: 13px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px;">Data de Cadastro</div>
+            <div style="font-size: 13px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">Status</div>
+            <div style="font-size: 13px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">Ações</div>
+          </div>
+          
+          <!-- Linhas da Tabela -->
+          ${currentFuncionarios.map((func, index) => {
+            const cpfFormatado = func.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            const departamento = departamentos[index % departamentos.length];
+            const isAdmin = cpfsAdministradores.includes(func.cpf);
+            const dataCadastro = new Date(func.data_criacao).toLocaleDateString('pt-BR', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: 'numeric' 
+            });
+            
+            return `
+            <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 1fr 60px; gap: 16px; padding: 18px 24px; border-bottom: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}20; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: ${config.primary_action_color || defaultConfig.primary_action_color}20; display: flex; align-items: center; justify-content: center; color: ${config.primary_action_color || defaultConfig.primary_action_color}; flex-shrink: 0;">
+                  ${icons.user}
+                </div>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 14px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">${func.nome_completo}</span>
+                    ${isAdmin ? `<span style="padding: 2px 6px; background: #dc262620; color: #dc2626; border-radius: 4px; font-size: 9px; font-weight: 700;">ADMIN</span>` : ''}
+                  </div>
+                </div>
+              </div>
+              <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.8;">${cpfFormatado}</div>
+              <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; font-weight: 500;">${departamento}</div>
+              <div style="font-size: 13px; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.7;">${dataCadastro}</div>
+              <div style="text-align: center;">
+                <span style="padding: 6px 12px; background: #22c55e20; color: #22c55e; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; display: inline-block;">
+                  ATIVO
+                </span>
+              </div>
+              <div style="text-align: center;">
+                <button 
+                  class="btn-deletar-funcionario" 
+                  data-func-id="${func.firebaseId}"
+                  data-func-nome="${func.nome_completo}"
+                  style="width: 40px; height: 40px; border: 2px solid #dc2626; background: transparent; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #dc2626; transition: all 0.2s;"
+                  onmouseover="this.style.background='#dc262610'"
+                  onmouseout="this.style.background='transparent'"
+                  title="Deletar funcionário"
+                >
+                  ${icons.trash}
+                </button>
+              </div>
+            </div>
+          `;
+          }).join('')}
+        </div>
+      `;
+      
+      // Adicionar event listeners aos botões de deletar
+      const btnsDeletar = container.querySelectorAll('.btn-deletar-funcionario');
+      btnsDeletar.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const funcId = btn.dataset.funcId;
+          const funcNome = btn.dataset.funcNome;
+          deletarFuncionario(funcId, funcNome);
+        });
+      });
+    }
+    
+    // ============================================
+    // SEÇÃO RELATÓRIOS
+    // ============================================
+    function renderRelatorioSection(content) {
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      content.innerHTML = `
+        <div class="fade-in">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <div>
+              <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Relatórios</h1>
+              <p style="margin: 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Campos 1-12 são puxados da aba RIDs (somente leitura). Demais campos são editáveis.</p>
+            </div>
+            <button id="btn-exportar-relatorio" style="padding: 12px 20px; border: none; background: ${config.primary_action_color || defaultConfig.primary_action_color}; color: #fff; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>Exportar CSV</span>
+            </button>
+          </div>
+          
+          <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden;">
+            <div id="relatorio-table-container" style="overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 280px);" class="scrollable">
+              <table id="relatorio-table" style="width: 100%; border-collapse: collapse; min-width: 3500px;">
+                <thead style="position: sticky; top: 0; z-index: 10; background: ${config.background_color || defaultConfig.background_color};">
+                  <tr>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 120px;">Unidade</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 80px;">RID Nº</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 130px;">Data da Emissão</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 150px;">Emitente</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 200px;">Funcionário, Terceiro ou Visitante</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 180px;">Setor ou Empresa do Emitente</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 200px;">Local do Incidente ou Desvio</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 200px;">Gênese do Incidente ou Desvio</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 180px;">Origem da Detecção</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 250px;">Descrição</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 140px;">Classificação do Risco</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 200px;">Ação Imediata</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 200px;">Ações Corretivas</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 180px;">Responsável pelas Ações</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 150px;">Prazo para Conclusão</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 150px;">Data da Conclusão</th>
+                    <th style="padding: 14px 12px; text-align: left; font-size: 12px; font-weight: 700; color: ${config.text_color || defaultConfig.text_color}; border-bottom: 2px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; white-space: nowrap; min-width: 120px;">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="relatorio-tbody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      renderRelatorioTable();
+      attachRelatorioListeners();
+    }
+    
+    function renderRelatorioTable() {
+      const tbody = $('relatorio-tbody');
+      if (!tbody) return;
+      
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      if (currentData.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="17" style="padding: 40px; text-align: center; color: ${config.text_color || defaultConfig.text_color}; opacity: 0.6; font-size: 14px;">
+              Nenhum RID registrado ainda
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = currentData.map((rid, index) => {
+        const dataOcorrencia = rid.data_ocorrencia ? new Date(rid.data_ocorrencia).toLocaleDateString('pt-BR') : '';
+        const prazoConclusao = rid.prazo_conclusao ? new Date(rid.prazo_conclusao).toLocaleDateString('pt-BR') : '';
+        const dataConclusao = rid.data_conclusao ? new Date(rid.data_conclusao).toLocaleDateString('pt-BR') : '';
+        const ridNumero = String(index + 1).padStart(4, '0');
+        
+        return `
+          <tr data-rid-id="${rid.firebaseId}" style="border-bottom: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}20;">
+            <!-- 1. Unidade (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="unidade"
+                value="${rid.unidade || ''}"
+                placeholder="Digite a unidade"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 2. RID Nº (somente leitura) -->
+            <td style="padding: 10px 12px;">
+              <div style="font-size: 13px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color}; padding: 6px 8px; background: ${config.background_color || defaultConfig.background_color}; border-radius: 4px;">#${ridNumero}</div>
+            </td>
+            
+            <!-- 3. Data da Emissão (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="date" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="data_ocorrencia"
+                value="${rid.data_ocorrencia || ''}"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 4. Emitente (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="emitente"
+                value="${rid.emitente || ''}"
+                placeholder="Digite o emitente"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 5. Tipo de Contrato (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="tipo_contrato"
+                value="${rid.tipo_contrato || ''}"
+                placeholder="Digite o tipo de contrato"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 6. Setor (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="setor"
+                value="${rid.setor || ''}"
+                placeholder="Digite o setor"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 7. Local da Ocorrência (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="local_ocorrencia"
+                value="${rid.local_ocorrencia || ''}"
+                placeholder="Digite o local"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 8. Incidente (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="incidente"
+                value="${rid.incidente || ''}"
+                placeholder="Digite o incidente"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 9. Origem da Detecção (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="origem_deteccao"
+                value="${rid.origem_deteccao || ''}"
+                placeholder="Digite a origem"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 10. Descrição (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="descricao"
+                value="${rid.descricao || ''}"
+                placeholder="Digite a descrição"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 11. Classificação de Risco (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="classificacao_risco"
+                value="${rid.classificacao_risco || ''}"
+                placeholder="Digite o risco"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 12. Ação Imediata (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="acao_imediata"
+                value="${rid.acao_imediata || ''}"
+                placeholder="Digite a ação imediata"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 13. Ações Corretivas (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="acoes_corretivas"
+                value="${rid.acoes_corretivas || ''}"
+                placeholder="Digite as ações corretivas"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 14. Responsável pelas Ações (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="responsavel_acoes"
+                value="${rid.responsavel_acoes || ''}"
+                placeholder="Digite o responsável"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 15. Prazo para Conclusão (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="date" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="prazo_conclusao"
+                value="${rid.prazo_conclusao || ''}"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 16. Data da Conclusão (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="date" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="data_conclusao"
+                value="${rid.data_conclusao || ''}"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+            
+            <!-- 17. Status (EDITÁVEL) -->
+            <td style="padding: 10px 12px;">
+              <input 
+                type="text" 
+                class="campo-editavel" 
+                data-rid-id="${rid.firebaseId}" 
+                data-campo="status"
+                value="${rid.status || ''}"
+                placeholder="Digite o status"
+                style="width: 100%; padding: 6px 8px; border: none; border-radius: 4px; font-size: 13px; background: transparent; color: ${config.text_color || defaultConfig.text_color}; outline: none;"
+              />
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      // Adicionar event listeners aos campos editáveis
+      const camposEditaveis = document.querySelectorAll('.campo-editavel');
+      camposEditaveis.forEach(campo => {
+        campo.addEventListener('change', async (e) => {
+          const ridId = e.target.dataset.ridId;
+          const nomeCampo = e.target.dataset.campo;
+          const novoValor = e.target.value.trim();
+          
+          if (!window.atualizarRIDFirebase) {
+            showMessage('Sistema de dados não disponível', 'error');
+            return;
+          }
+          
+          try {
+            const updates = {};
+            updates[nomeCampo] = novoValor;
+            
+            await window.atualizarRIDFirebase(ridId, updates);
+            showMessage('Campo atualizado com sucesso!', 'success');
+          } catch (error) {
+            showMessage('Erro ao atualizar campo', 'error');
+          }
+        });
+      });
+    }
+    
+    function attachRelatorioListeners() {
+      // Botão de exportar CSV
+      const btnExportar = $('btn-exportar-relatorio');
+      if (btnExportar) {
+        btnExportar.addEventListener('click', () => {
+          exportarRelatorioCSV();
+        });
+      }
+    }
+    
+    function exportarRelatorioCSV() {
+      if (currentData.length === 0) {
+        showMessage('Nenhum dado para exportar', 'error');
+        return;
+      }
+      
+      // Cabeçalhos
+      const headers = [
+        'RID N��',
+        '1. Emitente',
+        '2. Tipo de Contrato',
+        '3. Unidade',
+        '4. Setor do Emitente',
+        '5. Data',
+        '6. Incidente ou Desvios',
+        '7. Origem da Detecção',
+        '8. Local da Ocorrência',
+        '9. Descrição',
+        '10. Classificação de Risco',
+        '11. Ação Imediata',
+        '12. Status'
+      ];
+      
+      // Dados
+      const rows = currentData.map((rid, index) => {
+        const dataOcorrencia = rid.data_ocorrencia ? new Date(rid.data_ocorrencia).toLocaleDateString('pt-BR') : '';
+        const ridNumero = String(index + 1).padStart(4, '0');
+        
+        return [
+          ridNumero,
+          rid.emitente || '',
+          rid.tipo_contrato || '',
+          rid.unidade || '',
+          rid.setor || '',
+          dataOcorrencia,
+          rid.incidente || '',
+          rid.origem_deteccao || '',
+          rid.local_ocorrencia || '',
+          rid.descricao || '',
+          rid.classificacao_risco || '',
+          rid.acao_imediata || '',
+          rid.status || ''
+        ];
+      });
+      
+      // Criar CSV
+      let csv = headers.join(',') + '\n';
+      rows.forEach(row => {
+        const escapedRow = row.map(cell => {
+          const cellStr = String(cell).replace(/"/g, '""');
+          return `"${cellStr}"`;
+        });
+        csv += escapedRow.join(',') + '\n';
+      });
+      
+      // Download
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `relatorio_rids_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      showMessage('Relatório exportado com sucesso!', 'success');
+    }
+    
+    // ============================================
+    // PAINEL FUNCIONÁRIO
+    // ============================================
+    function renderFuncionarioPanel() {
+      const container = $('app-container');
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      container.innerHTML = `
+        <div style="width: 100%; height: 100%; display: flex; flex-direction: column; background: ${config.background_color || defaultConfig.background_color};">
+          <!-- Header -->
+          <header style="background: ${config.surface_color || defaultConfig.surface_color}; border-bottom: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}30; padding: 20px 32px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <h1 id="func-panel-title" style="margin: 0 0 4px 0; font-size: 22px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};"></h1>
+                <p style="margin: 0; font-size: 13px; opacity: 0.6; color: ${config.text_color || defaultConfig.text_color};">Bem-vindo, ${currentUser.nome}</p>
+              </div>
+              <button id="btn-func-logout" style="padding: 10px 16px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; background: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">
+                ${icons.logout}
+                <span>Sair</span>
+              </button>
+            </div>
+          </header>
+          
+          <!-- Main Content -->
+          <main style="flex: 1; overflow-y: auto; padding: 32px;" class="scrollable">
+            <div style="max-width: 1000px; margin: 0 auto;">
+              <!-- Botão Novo RID -->
+              <div style="margin-bottom: 24px;">
+                <button id="btn-abrir-modal-rid" style="padding: 14px 24px; border: none; background: ${config.primary_action_color || defaultConfig.primary_action_color}; color: #fff; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s;">
+                  ${icons.plus}
+                  <span>Emitir Novo RID</span>
+                </button>
+              </div>
+              
+              <!-- Meus RIDs -->
+              <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <h2 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Meus RIDs</h2>
+                <div id="func-rids-list"></div>
+              </div>
+            </div>
+          </main>
+          
+          <!-- Modal Novo RID -->
+          <div id="modal-func-novo-rid" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div style="background: ${config.surface_color || defaultConfig.surface_color}; border-radius: 16px; padding: 32px; width: 90%; max-width: 600px; max-height: 90%; overflow-y: auto;" class="scrollable">
+              <h2 style="margin: 0 0 24px 0; font-size: 22px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">Emissão de RID</h2>
+              <form id="form-func-rid" style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- 1. Emitente -->
+                <div>
+                  <label for="func-rid-emitente" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">1. Emitente</label>
+                  <input id="func-rid-emitente" type="text" required placeholder="Insira o nome do emitente" style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};" />
+                </div>
+                
+                <!-- 2. Tipo de contrato -->
+                <div>
+                  <label for="func-rid-tipo-contrato" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">2. Tipo de contrato</label>
+                  <select id="func-rid-tipo-contrato" required style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};">
+                    <option value="">Selecione...</option>
+                    <option value="Funcionário">Funcionário</option>
+                    <option value="Terceiro Contratado">Terceiro Contratado</option>
+                    <option value="Terceiro Eventual">Terceiro Eventual</option>
+                    <option value="Visitante">Visitante</option>
+                  </select>
+                </div>
+                
+                <!-- 3. Unidade -->
+                <div>
+                  <label for="func-rid-unidade" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">3. Unidade</label>
+                  <input id="func-rid-unidade" type="text" required placeholder="Insira a unidade" style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};" />
+                </div>
+                
+                <!-- 4. Setor do emitente -->
+                <div>
+                  <label for="func-rid-setor" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">4. Setor do emitente</label>
+                  <select id="func-rid-setor" required style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};">
+                    <option value="">Selecione...</option>
+                    <option value="ADM">ADM</option>
+                    <option value="M. MOVEL">M. MOVEL</option>
+                    <option value="M. FIXA">M. FIXA</option>
+                    <option value="M. EL������TRICA">M. ELÉTRICA</option>
+                    <option value="PRODUÇÃO">PRODUÇÃO</option>
+                    <option value="MINA">MINA</option>
+                  </select>
+                </div>
+                
+                <!-- 5. Data -->
+                <div>
+                  <label for="func-rid-data" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">5. Data</label>
+                  <input id="func-rid-data" type="date" required style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};" />
+                </div>
+                
+                <!-- 6. Incidente ou Desvios -->
+                <div>
+                  <label for="func-rid-incidente" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">6. Incidente ou Desvios</label>
+                  <select id="func-rid-incidente" required style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};">
+                    <option value="">Selecione...</option>
+                    <option value="Condição de Risco">Condição de Risco</option>
+                    <option value="Desvio Comportamental">Desvio Comportamental</option>
+                    <option value="Dano Material">Dano Material</option>
+                    <option value="Quase acidente">Quase acidente</option>
+                  </select>
+                </div>
+                
+                <!-- 7. Origem da detecção -->
+                <div>
+                  <label for="func-rid-origem" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">7. Origem da detecção</label>
+                  <select id="func-rid-origem" required style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};">
+                    <option value="">Selecione...</option>
+                    <option value="CSL">CSL</option>
+                    <option value="Inspeção programada">Inspeção programada</option>
+                    <option value="Inspeção não programada">Inspeção não programada</option>
+                    <option value="Observação Comportamental">Observação Comportamental</option>
+                    <option value="Constatação espont��nea">Constatação espontânea</option>
+                    <option value="Auditoria">Auditoria</option>
+                  </select>
+                </div>
+                
+                <!-- 8. Local da ocorrência -->
+                <div>
+                  <label for="func-rid-local" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">8. Local da ocorrência</label>
+                  <input id="func-rid-local" type="text" required placeholder="Insira o local da ocorrência" style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};" />
+                </div>
+                
+                <!-- 9. Descrição da Ocorrência -->
+                <div>
+                  <label for="func-rid-descricao" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">9. Descrição da Ocorrência</label>
+                  <textarea id="func-rid-descricao" required rows="4" placeholder="Descreva detalhadamente a ocorrência" style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; resize: vertical; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};"></textarea>
+                </div>
+                
+                <!-- 10. Classificação de risco -->
+                <div>
+                  <label for="func-rid-risco" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">10. Classificação de risco</label>
+                  <div style="font-size: 11px; opacity: 0.7; margin-bottom: 8px; line-height: 1.4; color: ${config.text_color || defaultConfig.text_color};">
+                    <strong>Baixo:</strong> Situações com baixo potencial de causar acidente.<br>
+                    <strong>Médio:</strong> Situações que podem causar acidente leve se não forem corrigidas.<br>
+                    <strong>Alto:</strong> Situações com alto potencial de causar acidente grave ou incapacitante.<br>
+                    <strong>Crítico:</strong> Situações com risco iminente de acidente grave ou fatal.
+                  </div>
+                  <select id="func-rid-risco" required style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};">
+                    <option value="">Selecione...</option>
+                    <option value="Baixo">Baixo</option>
+                    <option value="Médio">Médio</option>
+                    <option value="Alto">Alto</option>
+                    <option value="Crítico">Crítico</option>
+                  </select>
+                </div>
+                
+                <!-- 11. Ação imediata -->
+                <div>
+                  <label for="func-rid-acao" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">11. Ação imediata</label>
+                  <textarea id="func-rid-acao" required rows="3" placeholder="Descreva a ação imediata tomada" style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; resize: vertical; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};"></textarea>
+                </div>
+                
+                <!-- 12. Status -->
+                <div>
+                  <label for="func-rid-status" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: ${config.text_color || defaultConfig.text_color};">12. Status</label>
+                  <div style="font-size: 11px; opacity: 0.7; margin-bottom: 8px; line-height: 1.4; color: ${config.text_color || defaultConfig.text_color};">
+                    <strong>Corrigido:</strong> RID que já foi resolvido.<br>
+                    <strong>Vencido:</strong> RID pendente que vai ser passado para um encarregado resolver.
+                  </div>
+                  <select id="func-rid-status" required style="width: 100%; padding: 10px 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; border-radius: 8px; font-size: 14px; background: ${config.surface_color || defaultConfig.surface_color}; color: ${config.text_color || defaultConfig.text_color};">
+                    <option value="">Selecione...</option>
+                    <option value="Corrigidos">CORRIGIDO</option>
+                    <option value="Vencidos">VENCIDO</option>
+                  </select>
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 8px;">
+                  <button type="button" id="btn-cancelar-func-rid" style="flex: 1; padding: 12px; border: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}40; background: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; color: ${config.text_color || defaultConfig.text_color};">
+                    Cancelar
+                  </button>
+                  <button type="submit" id="btn-func-salvar-rid" style="flex: 1; padding: 12px; border: none; background: ${config.primary_action_color || defaultConfig.primary_action_color}; color: #fff; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                    <span id="btn-func-salvar-text">Registrar RID</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      applyConfigToFuncPanel(config);
+      attachFuncListeners();
+      renderFuncRidsList();
+    }
+    
+    function attachFuncListeners() {
+      const btnLogout = $('btn-func-logout');
+      if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+          currentUser = null;
+          showMessage('Logout realizado com sucesso', 'info');
+          render();
+        });
+      }
+      
+      const btnAbrirModal = $('btn-abrir-modal-rid');
+      const modal = $('modal-func-novo-rid');
+      const btnCancelar = $('btn-cancelar-func-rid');
+      const form = $('form-func-rid');
+      
+      if (btnAbrirModal && modal) {
+        btnAbrirModal.addEventListener('click', () => {
+          modal.style.display = 'flex';
+        });
+      }
+      
+      if (btnCancelar && modal && form) {
+        btnCancelar.addEventListener('click', () => {
+          modal.style.display = 'none';
+          form.reset();
+        });
+      }
+      
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal && form) {
+            modal.style.display = 'none';
+            form.reset();
+          }
+        });
+      }
+      
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          if (!window.salvarRIDFirebase) {
+            showMessage('Sistema de dados não disponível', 'error');
+            return;
+          }
+          
+          const emitente = $('func-rid-emitente').value.trim();
+          const tipoContrato = $('func-rid-tipo-contrato').value;
+          const unidade = $('func-rid-unidade').value.trim();
+          const setor = $('func-rid-setor').value;
+          const data = $('func-rid-data').value;
+          const incidente = $('func-rid-incidente').value;
+          const origem = $('func-rid-origem').value;
+          const local = $('func-rid-local').value.trim();
+          const descricao = $('func-rid-descricao').value.trim();
+          const risco = $('func-rid-risco').value;
+          const acao = $('func-rid-acao').value.trim();
+          const status = $('func-rid-status').value;
+          
+          if (!emitente || !tipoContrato || !unidade || !setor || !data || !incidente || !origem || !local || !descricao || !risco || !acao || !status) {
+            showMessage('Preencha todos os campos obrigatórios', 'error');
+            return;
+          }
+          
+          const btnSalvar = $('btn-func-salvar-rid');
+          const btnText = $('btn-func-salvar-text');
+          if (btnSalvar && btnText) {
+            btnSalvar.disabled = true;
+            btnText.innerHTML = '<div class="spinner"></div>';
+          }
+          
+          try {
+            await window.salvarRIDFirebase({
+              nome_funcionario: currentUser.nome,
+              emitente: emitente,
+              tipo_contrato: tipoContrato,
+              unidade: unidade,
+              setor: setor,
+              data_ocorrencia: data,
+              incidente: incidente,
+              origem_deteccao: origem,
+              local_ocorrencia: local,
+              titulo: `${incidente} - ${local}`,
+              descricao: descricao,
+              classificacao_risco: risco,
+              acao_imediata: acao,
+              status: status
+            });
+            
+            showMessage('RID registrado com sucesso!', 'success');
+            if (modal) modal.style.display = 'none';
+            form.reset();
+          } catch (error) {
+            showMessage('Erro ao registrar RID', 'error');
+          } finally {
+            if (btnSalvar && btnText) {
+              btnSalvar.disabled = false;
+              btnText.textContent = 'Registrar RID';
+            }
+          }
+        });
+      }
+    }
+    
+    function renderFuncRidsList() {
+      const container = $('func-rids-list');
+      if (!container) return;
+      
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      // Filtrar apenas RIDs do funcionário logado
+      const meusRids = currentData
+        .filter(r => r.nome_funcionario === currentUser.nome)
+        .sort((a, b) => new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime());
+      
+      if (meusRids.length === 0) {
+        container.innerHTML = `
+          <div style="padding: 40px; text-align: center;">
+            <p style="margin: 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">Você ainda não possui RIDs registrados</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = meusRids.map(r => `
+        <div style="padding: 16px; border-bottom: 1px solid ${config.secondary_action_color || defaultConfig.secondary_action_color}20;">
+          <div style="display: flex; align-items: start; justify-content: space-between; gap: 16px;">
+            <div style="flex: 1;">
+              <h3 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">${r.titulo}</h3>
+              <p style="margin: 0 0 12px 0; font-size: 13px; opacity: 0.7; line-height: 1.5; color: ${config.text_color || defaultConfig.text_color};">${r.descricao}</p>
+              <div style="font-size: 12px; opacity: 0.6; color: ${config.text_color || defaultConfig.text_color};">
+                Criado em: ${new Date(r.data_criacao).toLocaleDateString()} ${new Date(r.data_criacao).toLocaleTimeString()}
+              </div>
+            </div>
+            <span style="padding: 6px 12px; background: ${getStatusColor(r.status, config)}20; color: ${getStatusColor(r.status, config)}; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap;">
+              ${r.status}
+            </span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // ============================================
+    // APLICAR CONFIG (Element SDK)
+    // ============================================
+    function applyConfigToLogin(config) {
+      const cfg = config || defaultConfig;
+      
+      const title = $('login-title');
+      if (title) {
+        title.textContent = cfg.titulo_sistema || defaultConfig.titulo_sistema;
+        title.style.fontSize = (cfg.font_size || defaultConfig.font_size) * 1.6 + 'px';
+        title.style.fontFamily = `${cfg.font_family || defaultConfig.font_family}, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+      }
+      
+      const subtitle = $('login-subtitle');
+      if (subtitle) {
+        subtitle.textContent = cfg.texto_login || defaultConfig.texto_login;
+        subtitle.style.fontSize = (cfg.font_size || defaultConfig.font_size) * 0.93 + 'px';
+      }
+      
+      const demoUser = $('demo-admin-user');
+      const demoPass = $('demo-admin-pass');
+      if (demoUser) demoUser.textContent = cfg.usuario_admin || defaultConfig.usuario_admin;
+      if (demoPass) demoPass.textContent = cfg.senha_admin || defaultConfig.senha_admin;
+    }
+    
+    function applyConfigToAdminPanel(config) {
+      const cfg = config || defaultConfig;
+      
+      const sidebarTitle = $('admin-sidebar-title');
+      if (sidebarTitle) {
+        sidebarTitle.textContent = cfg.titulo_sistema || defaultConfig.titulo_sistema;
+        sidebarTitle.style.fontFamily = `${cfg.font_family || defaultConfig.font_family}, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+      }
+    }
+    
+    function applyConfigToFuncPanel(config) {
+      const cfg = config || defaultConfig;
+      
+      const title = $('func-panel-title');
+      if (title) {
+        title.textContent = cfg.titulo_sistema || defaultConfig.titulo_sistema;
+        title.style.fontFamily = `${cfg.font_family || defaultConfig.font_family}, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+      }
+    }
+    
+    async function onConfigChange(config) {
+      const cfg = config || defaultConfig;
+      
+      if (!currentUser) {
+        applyConfigToLogin(cfg);
+      } else if (currentUser.tipo === 'admin') {
+        applyConfigToAdminPanel(cfg);
+        renderAdminSection();
+      } else {
+        applyConfigToFuncPanel(cfg);
+        renderFuncRidsList();
+      }
+    }
+    
+    // ============================================
+    // ELEMENT SDK
+    // ============================================
+    function initElementSdk() {
+      if (!window.elementSdk) {
+        render();
+        iniciarSincronizacaoFirebase();
+        return;
+      }
+      
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => {
+          const cfg = config || defaultConfig;
+          return {
+            recolorables: [
+              {
+                get: () => cfg.background_color || defaultConfig.background_color,
+                set: (value) => {
+                  window.elementSdk.setConfig({ background_color: value });
+                }
+              },
+              {
+                get: () => cfg.surface_color || defaultConfig.surface_color,
+                set: (value) => {
+                  window.elementSdk.setConfig({ surface_color: value });
+                }
+              },
+              {
+                get: () => cfg.text_color || defaultConfig.text_color,
+                set: (value) => {
+                  window.elementSdk.setConfig({ text_color: value });
+                }
+              },
+              {
+                get: () => cfg.primary_action_color || defaultConfig.primary_action_color,
+                set: (value) => {
+                  window.elementSdk.setConfig({ primary_action_color: value });
+                }
+              },
+              {
+                get: () => cfg.secondary_action_color || defaultConfig.secondary_action_color,
+                set: (value) => {
+                  window.elementSdk.setConfig({ secondary_action_color: value });
+                }
+              }
+            ],
+            borderables: [],
+            fontEditable: {
+              get: () => cfg.font_family || defaultConfig.font_family,
+              set: (value) => {
+                window.elementSdk.setConfig({ font_family: value });
+              }
+            },
+            fontSizeable: {
+              get: () => cfg.font_size || defaultConfig.font_size,
+              set: (value) => {
+                window.elementSdk.setConfig({ font_size: value });
+              }
+            }
+          };
+        },
+        mapToEditPanelValues: (config) => {
+          const cfg = config || defaultConfig;
+          return new Map([
+            ['titulo_sistema', cfg.titulo_sistema || defaultConfig.titulo_sistema],
+            ['texto_login', cfg.texto_login || defaultConfig.texto_login],
+            ['usuario_admin', cfg.usuario_admin || defaultConfig.usuario_admin],
+            ['senha_admin', cfg.senha_admin || defaultConfig.senha_admin]
+          ]);
+        }
+      });
+      
+      render();
+      iniciarSincronizacaoFirebase();
+    }
+    
+    // ============================================
+    // BOOTSTRAP
+    // ============================================
+    initElementSdk();
+    
+    // Adicionar dados de teste após 3 segundos (dar tempo para Firebase inicializar)
+    setTimeout(adicionarDadosDeTeste, 3000);
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a4cd14ea532ee1b',t:'MTc2NDE5NjA5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
