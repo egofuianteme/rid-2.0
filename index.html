@@ -1365,50 +1365,6 @@
       renderRidsList();
     }
     
-    function renderRidsSection(content) {
-  const config = window.elementSdk?.config || defaultConfig;
-
-  content.innerHTML = `
-    <div class="fade-in">
-      <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 600; color: ${config.text_color};">
-        Gestão de RIDs
-      </h1>
-      <p style="margin: 0 0 24px 0; opacity: 0.6; font-size: 14px; color: ${config.text_color};">
-        Todos os RIDs registrados
-      </p>
-
-      <!-- BOTÃO ADICIONADO -->
-      <button id="btn-criar-rid-admin"
-        style="
-          padding: 12px 18px;
-          background: ${config.primary_action_color};
-          color: #fff;
-          border: none;
-          border-radius: 10px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          margin-bottom: 24px;
-        ">
-        + Criar novo RID
-      </button>
-
-      <div id="rids-list-container"></div>
-    </div>
-  `;
-
-  // Clique do botão → mesma função usada no painel do funcionário
-  const btnCriar = document.getElementById('btn-criar-rid-admin');
-  if (btnCriar) {
-    btnCriar.addEventListener('click', () => {
-      abrirFormularioCriarRid(); // MESMA função existente
-    });
-  }
-
-  renderRidsList();
-}
-
-    
     function renderRidsList() {
       const container = $('rids-list-container');
       if (!container) return;
