@@ -1351,6 +1351,62 @@
     // SEÇÃO RIDs (SIMPLIFICADA)
     // ============================================
     function renderRidsSection(content) {
+  const config = window.elementSdk?.config || defaultConfig;
+
+  content.innerHTML = `
+    <div class="fade-in">
+      <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 600; color: ${config.text_color || defaultConfig.text_color};">
+        Gestão de RIDs
+      </h1>
+
+      <p style="margin: 0 0 32px 0; opacity: 0.6; font-size: 14px; color: ${config.text_color || defaultConfig.text_color};">
+        Todos os RIDs registrados
+      </p>
+
+      <!-- 🔥 BOTÃO ADICIONADO AQUI -->
+      <div style="margin: 0 0 24px 0;">
+        <button 
+          id="btn-abrir-modal-rid" 
+          style="
+            padding: 14px 24px; 
+            border: none; 
+            background: ${config.primary_action_color || defaultConfig.primary_action_color}; 
+            color: #fff; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            transition: opacity 0.2s;
+          "
+        >
+          ${icons.plus}
+          <span>Emitir Novo RID</span>
+        </button>
+      </div>
+      <!-- 🔥 FIM DO BOTÃO -->
+
+      <div id="rids-list-container"></div>
+    </div>
+  `;
+
+  // Abre o modal quando clicar no botão
+  setTimeout(() => {
+    const btn = document.getElementById('btn-abrir-modal-rid');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const modal = $('modal-func-novo-rid');
+        if (modal) modal.style.display = 'flex';
+      });
+    }
+  }, 100);
+
+  renderRidsList();
+}
+
+    function renderRidsSection(content) {
       const config = window.elementSdk?.config || defaultConfig;
       
       content.innerHTML = `
@@ -2862,285 +2918,7 @@
       render();
       iniciarSincronizacaoFirebase();
     }
-    
-    // ============================================
-    // DADOS DE TESTE
-    // ============================================
-    let dadosTesteAdicionados = false;
-    
-    async function adicionarDadosDeTeste() {
-      // Evitar duplicação
-      if (dadosTesteAdicionados) {
-        console.log('⏭️ Dados de teste já foram processados');
-        return;
-      }
       
-      // Aguardar Firebase estar disponível
-      if (!window.salvarFuncionarioFirebase || !window.salvarRIDFirebase || !window.buscarFuncionariosFirebase || !window.buscarRIDsFirebase) {
-        console.log('⏳ Aguardando Firebase...');
-        setTimeout(adicionarDadosDeTeste, 500);
-        return;
-      }
-      
-      dadosTesteAdicionados = true;
-      
-      console.log('🔍 Verificando dados existentes...');
-      
-      try {
-        // Buscar dados existentes
-        const funcionariosExistentes = await window.buscarFuncionariosFirebase();
-        const ridsExistentes = await window.buscarRIDsFirebase();
-        
-        console.log(`���� Funcionários existentes: ${funcionariosExistentes.length}`);
-        console.log(`📊 RIDs existentes: ${ridsExistentes.length}`);
-        
-        // Se já existem dados, não adicionar
-        if (funcionariosExistentes.length > 0 || ridsExistentes.length > 0) {
-          console.log('��� Dados já existem no Firebase, pulando inserção');
-          showMessage('Sistema carregado com dados existentes', 'info');
-          return;
-        }
-        
-        console.log('📝 Adicionando dados de teste...');
-        showMessage('Carregando dados de demonstra���ão...', 'info');
-        
-        // Adicionar funcionários de teste
-        const funcionariosTeste = [
-          { nome_completo: 'João Silva Santos', cpf: '38927158020', senha: '1234' },
-          { nome_completo: 'Maria Oliveira Costa', cpf: '71294531004', senha: '1234' },
-          { nome_completo: 'Pedro Henrique Souza', cpf: '05862974006', senha: '1234' },
-          { nome_completo: 'Ana Paula Ferreira', cpf: '12345678901', senha: '1234' },
-          { nome_completo: 'Carlos Eduardo Lima', cpf: '98765432109', senha: '1234' },
-          { nome_completo: 'Juliana Martins Rocha', cpf: '45678912345', senha: '1234' },
-          { nome_completo: 'Roberto Carlos Alves', cpf: '78945612378', senha: '1234' },
-          { nome_completo: 'Fernanda Costa Ribeiro', cpf: '32165498732', senha: '1234' }
-        ];
-        
-        console.log('👥 Adicionando funcionários...');
-        for (const func of funcionariosTeste) {
-          await window.salvarFuncionarioFirebase(func);
-          console.log(`✅ Funcionário adicionado: ${func.nome_completo}`);
-        }
-        
-        console.log('✅ Todos os funcionários adicionados');
-        
-        // Aguardar um pouco para garantir que os funcionários foram salvos
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        console.log('📋 Adicionando RIDs...');
-        
-        // Adicionar RIDs de teste
-        const ridsTeste = [
-          {
-            nome_funcionario: 'João Silva Santos',
-            emitente: 'João Silva Santos',
-            tipo_contrato: 'Funcionário',
-            unidade: 'Unidade 01',
-            setor: 'PRODUÇÃO',
-            data_ocorrencia: '2024-01-15',
-            incidente: 'Condição de Risco',
-            origem_deteccao: 'Inspeção programada',
-            local_ocorrencia: 'Linha de Produção A',
-            titulo: 'Condição de Risco - Linha de Produção A',
-            descricao: 'Identificado cabo elétrico exposto próximo à área de circulação de funcionários, apresentando risco de choque elétrico.',
-            classificacao_risco: 'Alto',
-            acao_imediata: 'Área isolada com fita zebrada e sinalização de perigo. Equipe de manutenção elétrica acionada.',
-            status: 'Vencidos',
-            acoes_corretivas: 'Substituir cabo danificado e instalar proteção adequada',
-            responsavel_acoes: 'Equipe de Manutenção Elétrica',
-            prazo_conclusao: '2024-01-20'
-          },
-          {
-            nome_funcionario: 'Maria Oliveira Costa',
-            emitente: 'Maria Oliveira Costa',
-            tipo_contrato: 'Funcionário',
-            unidade: 'Unidade 02',
-            setor: 'M. MOVEL',
-            data_ocorrencia: '2024-01-18',
-            incidente: 'Desvio Comportamental',
-            origem_deteccao: 'Observação Comportamental',
-            local_ocorrencia: 'Oficina Mecânica',
-            titulo: 'Desvio Comportamental - Oficina Mecânica',
-            descricao: 'Funcionário operando empilhadeira sem utilizar cinto de segurança conforme procedimento operacional padrão.',
-            classificacao_risco: 'Médio',
-            acao_imediata: 'Operação interrompida imediatamente. Realizado diálogo de segurança com o operador sobre a importância do uso correto dos EPIs.',
-            status: 'Corrigidos',
-            acoes_corretivas: 'Treinamento de reciclagem sobre operação segura de empilhadeiras',
-            responsavel_acoes: 'Supervisor de Segurança',
-            prazo_conclusao: '2024-01-25',
-            data_conclusao: '2024-01-23'
-          },
-          {
-            nome_funcionario: 'Pedro Henrique Souza',
-            emitente: 'Pedro Henrique Souza',
-            tipo_contrato: 'Funcionário',
-            unidade: 'Unidade 01',
-            setor: 'MINA',
-            data_ocorrencia: '2024-01-20',
-            incidente: 'Quase acidente',
-            origem_deteccao: 'Constatação espontânea',
-            local_ocorrencia: 'Frente de Lavra 03',
-            titulo: 'Quase acidente - Frente de Lavra 03',
-            descricao: 'Queda de rocha de aproximadamente 50kg próximo a operador durante desmonte. Operador não foi atingido pois estava fora da área de risco no momento.',
-            classificacao_risco: 'Crítico',
-            acao_imediata: 'Área interditada imediatamente. Realizada inspeção geotécnica completa da frente de lavra. Reforço de contenção instalado.',
-            status: 'Vencidos',
-            acoes_corretivas: 'Implementar sistema de monitoramento geotécnico contínuo e revisão do plano de fogo',
-            responsavel_acoes: 'Engenheiro de Minas',
-            prazo_conclusao: '2024-02-05'
-          },
-          {
-            nome_funcionario: 'Ana Paula Ferreira',
-            emitente: 'Ana Paula Ferreira',
-            tipo_contrato: 'Funcionário',
-            unidade: 'Unidade 02',
-            setor: 'ADM',
-            data_ocorrencia: '2024-01-22',
-            incidente: 'Condição de Risco',
-            origem_deteccao: 'Inspeção não programada',
-            local_ocorrencia: 'Escritório Administrativo',
-            titulo: 'Condição de Risco - Escritório Administrativo',
-            descricao: 'Extintor de incêndio com prazo de validade vencido há 3 meses. Equipamento não estava em condições de uso em caso de emergência.',
-            classificacao_risco: 'Médio',
-            acao_imediata: 'Extintor removido e substituído por unidade com validade em dia. Verificação de todos os extintores do pr��dio realizada.',
-            status: 'Corrigidos',
-            acoes_corretivas: 'Implementar checklist mensal de verificação de extintores',
-            responsavel_acoes: 'Brigada de Incêndio',
-            prazo_conclusao: '2024-01-24',
-            data_conclusao: '2024-01-24'
-          },
-          {
-            nome_funcionario: 'Carlos Eduardo Lima',
-            emitente: 'Carlos Eduardo Lima',
-            tipo_contrato: 'Funcionário',
-            unidade: 'Unidade 01',
-            setor: 'M. FIXA',
-            data_ocorrencia: '2024-01-23',
-            incidente: 'Dano Material',
-            origem_deteccao: 'CSL',
-            local_ocorrencia: 'Britador Primário',
-            titulo: 'Dano Material - Britador Primário',
-            descricao: 'Correia transportadora apresentou rasgo de 2 metros devido a material contundente não identificado na alimentação.',
-            classificacao_risco: 'Baixo',
-            acao_imediata: 'Equipamento desligado. Correia substituída por unidade reserva. Produção retomada após 4 horas.',
-            status: 'Corrigidos',
-            acoes_corretivas: 'Instalar detector de metais antes da alimentação do britador',
-            responsavel_acoes: 'Supervisor de Manutenção',
-            prazo_conclusao: '2024-02-15',
-            data_conclusao: '2024-01-30'
-          },
-          {
-            nome_funcionario: 'Juliana Martins Rocha',
-            emitente: 'Juliana Martins Rocha',
-            tipo_contrato: 'Terceiro Contratado',
-            unidade: 'Unidade 02',
-            setor: 'M. ELÉTRICA',
-            data_ocorrencia: '2024-01-24',
-            incidente: 'Condição de Risco',
-            origem_deteccao: 'Auditoria',
-            local_ocorrencia: 'Subestação Elétrica',
-            titulo: 'Condi��ão de Risco - Subestação Elétrica',
-            descricao: 'Identificado acesso não controlado à subestação. Porta de acesso sem cadeado e sinalização de perigo inadequada.',
-            classificacao_risco: 'Alto',
-            acao_imediata: 'Instalado cadeado de segurança e placas de advertência. Acesso restrito apenas a pessoal autorizado.',
-            status: 'Em aberto',
-            acoes_corretivas: 'Implementar sistema de controle de acesso eletrônico',
-            responsavel_acoes: 'Engenheiro Eletricista',
-            prazo_conclusao: '2024-02-10'
-          },
-          {
-            nome_funcionario: 'Roberto Carlos Alves',
-            emitente: 'Roberto Carlos Alves',
-            tipo_contrato: 'Funcionário',
-            unidade: 'Unidade 01',
-            setor: 'PRODUÇ��O',
-            data_ocorrencia: '2024-01-25',
-            incidente: 'Desvio Comportamental',
-            origem_deteccao: 'Inspeção programada',
-            local_ocorrencia: 'Área de Carregamento',
-            titulo: 'Desvio Comportamental - Área de Carregamento',
-            descricao: 'Operador de carregadeira transitando em velocidade acima do permitido (30 km/h) na área interna da planta.',
-            classificacao_risco: 'Alto',
-            acao_imediata: 'Operador orientado sobre os limites de velocidade. Realizado DDS (Diálogo Diário de Segurança) com toda equipe.',
-            status: 'Vencidos',
-            acoes_corretivas: 'Instalar redutores de velocidade e placas de sinalização adicionais',
-            responsavel_acoes: 'Supervisor de Operações',
-            prazo_conclusao: '2024-02-08'
-          },
-          {
-            nome_funcionario: 'Fernanda Costa Ribeiro',
-            emitente: 'Fernanda Costa Ribeiro',
-            tipo_contrato: 'Funcionário',
-            unidade: 'Unidade 02',
-            setor: 'PRODUÇÃO',
-            data_ocorrencia: '2024-01-26',
-            incidente: 'Condição de Risco',
-            origem_deteccao: 'Constatação espontânea',
-            local_ocorrencia: 'Peneira Vibratória',
-            titulo: 'Condição de Risco - Peneira Vibratória',
-            descricao: 'Proteç��o lateral da peneira vibratória danificada, permitindo acesso a partes móveis do equipamento durante operação.',
-            classificacao_risco: 'Crítico',
-            acao_imediata: 'Equipamento desligado imediatamente. Área isolada até conclusão do reparo da proteção.',
-            status: 'Em aberto',
-            acoes_corretivas: 'Substituir proteção danificada e implementar inspeção semanal de proteções',
-            responsavel_acoes: 'Equipe de Manutenção Mecânica',
-            prazo_conclusao: '2024-01-28'
-          },
-          {
-            nome_funcionario: 'João Silva Santos',
-            emitente: 'João Silva Santos',
-            tipo_contrato: 'Funcionário',
-            unidade: 'Unidade 01',
-            setor: 'PRODUÇÃO',
-            data_ocorrencia: '2024-01-27',
-            incidente: 'Quase acidente',
-            origem_deteccao: 'Observação Comportamental',
-            local_ocorrencia: 'Pátio de Estocagem',
-            titulo: 'Quase acidente - Pátio de Estocagem',
-            descricao: 'Pedestre atravessou área de manobra de caminhões sem aguardar sinalização do operador. Caminhão freou a tempo evitando atropelamento.',
-            classificacao_risco: 'Crítico',
-            acao_imediata: 'Pedestre orientado sobre procedimentos de segurança. Reforçada sinalização de área de risco.',
-            status: 'Vencidos',
-            acoes_corretivas: 'Criar passarela exclusiva para pedestres e instalar sistema de alerta sonoro',
-            responsavel_acoes: 'Engenheiro de Segurança',
-            prazo_conclusao: '2024-02-20'
-          },
-          {
-            nome_funcionario: 'Maria Oliveira Costa',
-            emitente: 'Maria Oliveira Costa',
-            tipo_contrato: 'Funcionário',
-            unidade: 'Unidade 02',
-            setor: 'M. MOVEL',
-            data_ocorrencia: '2024-01-28',
-            incidente: 'Dano Material',
-            origem_deteccao: 'Inspeção programada',
-            local_ocorrencia: 'Garagem de Veículos',
-            titulo: 'Dano Material - Garagem de Veículos',
-            descricao: 'Vazamento de óleo hidráulico em escavadeira devido a mangueira rompida. Aproximadamente 20 litros de óleo derramados no piso.',
-            classificacao_risco: 'Médio',
-            acao_imediata: 'Equipamento isolado. Óleo contido com material absorvente. Mangueira substituída.',
-            status: 'Corrigidos',
-            acoes_corretivas: 'Implementar inspeção preventiva quinzenal de mangueiras hidráulicas',
-            responsavel_acoes: 'Mecânico Responsável',
-            prazo_conclusao: '2024-02-05',
-            data_conclusao: '2024-01-29'
-          }
-        ];
-        
-        for (const rid of ridsTeste) {
-          await window.salvarRIDFirebase(rid);
-          console.log(`✅ RID adicionado: ${rid.titulo}`);
-        }
-        
-        console.log('✅ Todos os RIDs de teste adicionados');
-        showMessage('✅ Dados de demonstração carregados com sucesso!', 'success');
-        
-      } catch (error) {
-        console.error('❌ Erro ao adicionar dados de teste:', error);
-        showMessage('Erro ao carregar dados de demonstra��ão', 'error');
-      }
-    }
-    
     // ============================================
     // BOOTSTRAP
     // ============================================
