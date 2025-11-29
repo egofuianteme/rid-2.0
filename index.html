@@ -626,6 +626,26 @@
       border-radius: 12px;
       padding: clamp(20px, 3vw, 35px);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .recent-rids-card::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .recent-rids-card::-webkit-scrollbar-track {
+      background: #f0f0f0;
+      border-radius: 10px;
+    }
+
+    .recent-rids-card::-webkit-scrollbar-thumb {
+      background: #FFD36B;
+      border-radius: 10px;
+    }
+
+    .recent-rids-card::-webkit-scrollbar-thumb:hover {
+      background: #FFC94D;
     }
 
     .empty-state {
@@ -1239,7 +1259,7 @@
     <div class="panel-user-info">
      <div class="menu-wrapper"><button class="menu-button" id="btnNotificationsAdmin" style="position: relative;">
        <svg width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path> <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-       </svg><span id="notificationBadgeAdmin" style="position: absolute; top: 4px; right: 4px; background: #F44336; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; font-weight: 700; display: none; align-items: center; justify-content: center;">0</span> </button>
+       </svg><span id="notificationBadgeAdmin" style="position: absolute; top: 4px; right: 4px; background: #F44336; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;">0</span> </button>
       <div class="dropdown-menu" id="dropdownNotificationsAdmin" style="min-width: 320px; max-width: 400px; max-height: 500px; overflow-y: auto;">
        <div style="padding: 15px; border-bottom: 1px solid #f0f0f0;">
         <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #333;">Notificações</h4>
@@ -1397,7 +1417,7 @@
     <div class="panel-user-info">
      <div class="menu-wrapper"><button class="menu-button" id="btnNotificationsEmployee" style="position: relative;">
        <svg width="24" height="24" viewbox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path> <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-       </svg><span id="notificationBadgeEmployee" style="position: absolute; top: 4px; right: 4px; background: #F44336; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; font-weight: 700; display: none; align-items: center; justify-content: center;">0</span> </button>
+       </svg><span id="notificationBadgeEmployee" style="position: absolute; top: 4px; right: 4px; background: #F44336; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;">0</span> </button>
       <div class="dropdown-menu" id="dropdownNotificationsEmployee" style="min-width: 320px; max-width: 400px; max-height: 500px; overflow-y: auto;">
        <div style="padding: 15px; border-bottom: 1px solid #f0f0f0;">
         <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #333;">Notificações</h4>
@@ -1433,7 +1453,7 @@
      <div class="empty-state" id="emptyStateEmployee">
       <svg width="64" height="64" viewbox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path> <polyline points="14 2 14 8 20 8"></polyline> <line x1="16" y1="13" x2="8" y2="13"></line> <line x1="16" y1="17" x2="8" y2="17"></line>
       </svg>
-      <p>Você ainda não emitiu nenhum RID</p>
+      <p>Voc�� ainda não emitiu nenhum RID</p>
      </div>
      <div class="rids-list" id="employeeRidsList"></div>
     </div>
@@ -2073,7 +2093,7 @@
         else if (position === 2) positionClass = 'second';
         else if (position === 3) positionClass = 'third';
         
-        const positionDisplay = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '��' : position;
+        const positionDisplay = position === 1 ? '🥇' : position === 2 ? '��' : position === 3 ? '��' : position;
         
         return `
           <div class="ranking-item">
@@ -2238,7 +2258,7 @@
       });
     }
     
-    // Deletar usuário
+    // Deletar usu��rio
     async function deleteUser(userId) {
       const btnConfirm = document.getElementById('btnConfirmDelete');
       btnConfirm.disabled = true;
@@ -2366,7 +2386,7 @@
                 </div>
                 
                 <div style="background: #f9f9f9; padding: 18px; border-radius: 10px;">
-                  <div style="font-size: 12px; color: #999; font-weight: 600; margin-bottom: 8px;">ORIGEM DA DETECÇÃO</div>
+                  <div style="font-size: 12px; color: #999; font-weight: 600; margin-bottom: 8px;">ORIGEM DA DETEC��ÃO</div>
                   <div style="font-size: 15px; font-weight: 600; color: #333;">${rid.origem || 'Não informado'}</div>
                 </div>
               </div>
@@ -2402,7 +2422,7 @@
                     <option value="Baixo" ${rid.classificacao === 'Baixo' ? 'selected' : ''}>Baixo - Situações com baixo potencial de causar acidente</option>
                     <option value="Médio" ${rid.classificacao === 'Médio' ? 'selected' : ''}>Médio - Situações que podem causar acidente leve</option>
                     <option value="Alto" ${rid.classificacao === 'Alto' ? 'selected' : ''}>Alto - Alto potencial de acidente grave ou incapacitante</option>
-                    <option value="Crítico" ${rid.classificacao === 'Crítico' ? 'selected' : ''}>Crítico - Risco iminente de acidente grave ou fatal</option>
+                    <option value="Cr��tico" ${rid.classificacao === 'Crítico' ? 'selected' : ''}>Crítico - Risco iminente de acidente grave ou fatal</option>
                   </select>
                 </div>
                 
@@ -2582,7 +2602,7 @@
           
           setTimeout(() => {
             document.getElementById('designarRidModal').remove();
-            // Fechar também o modal de visualização
+            // Fechar tamb��m o modal de visualização
             const visualizarModal = document.getElementById('visualizarRidModal');
             if (visualizarModal) {
               visualizarModal.remove();
@@ -2940,5 +2960,5 @@
 
     initApp();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a656364f406861f',t:'MTc2NDQ1MzczNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a65779a956b861f',t:'MTc2NDQ1NDU2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
