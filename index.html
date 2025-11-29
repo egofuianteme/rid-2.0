@@ -8,7 +8,6 @@
   <script src="/_sdk/element_sdk.js"></script><!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <style>
     body {
       box-sizing: border-box;
@@ -127,10 +126,16 @@
       color: #333;
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       background: #FFF2D6;
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(255, 211, 107, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
     }
 
     .btn-secondary {
@@ -143,21 +148,21 @@
       background: #FFF2D6;
     }
 
-    .demo-note {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 8px;
-      padding: 12px;
-      margin-top: 20px;
-      font-size: 13px;
-      color: #856404;
-      text-align: center;
-    }
-
     .error-message {
       background: #f8d7da;
       border: 1px solid #f5c6cb;
       color: #721c24;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .success-message {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
       padding: 12px;
       border-radius: 8px;
       margin-bottom: 20px;
@@ -333,7 +338,7 @@
       position: relative;
     }
 
-    /* Modal de Confirmação */
+    /* Modal de Confirmaç���o */
     .confirm-modal {
       position: fixed;
       top: 0;
@@ -627,6 +632,10 @@
       text-align: center;
       padding: clamp(40px, 6vw, 80px) clamp(20px, 3vw, 40px);
       color: #999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     .empty-state svg {
@@ -735,6 +744,284 @@
       font-size: clamp(11px, 1.8vw, 13px);
       color: #999;
       white-space: nowrap;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: clamp(15px, 2.5vw, 20px);
+      border-bottom: 1px solid #f0f0f0;
+      transition: all 0.3s;
+    }
+
+    .ranking-item:last-child {
+      border-bottom: none;
+    }
+
+    .ranking-item:hover {
+      background: #f9f9f9;
+    }
+
+    .ranking-item-left {
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 2vw, 20px);
+      flex: 1;
+    }
+
+    .ranking-position {
+      width: clamp(36px, 5vw, 48px);
+      height: clamp(36px, 5vw, 48px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(16px, 2.5vw, 20px);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .ranking-position.first {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      color: white;
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    }
+
+    .ranking-position.second {
+      background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+      color: white;
+      box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+    }
+
+    .ranking-position.third {
+      background: linear-gradient(135deg, #CD7F32, #B8860B);
+      color: white;
+      box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+    }
+
+    .ranking-position.other {
+      background: #f0f0f0;
+      color: #666;
+    }
+
+    .ranking-item-info {
+      flex: 1;
+    }
+
+    .ranking-item-name {
+      font-size: clamp(14px, 2.5vw, 17px);
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 4px 0;
+    }
+
+    .ranking-item-sector {
+      font-size: clamp(12px, 2vw, 14px);
+      color: #666;
+      margin: 0;
+    }
+
+    .ranking-item-count {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #FFF2D6;
+      padding: clamp(6px, 1.5vw, 10px) clamp(12px, 2vw, 16px);
+      border-radius: 20px;
+    }
+
+    .ranking-item-count-icon {
+      width: clamp(16px, 2.5vw, 20px);
+      height: clamp(16px, 2.5vw, 20px);
+    }
+
+    .ranking-item-count-icon svg {
+      width: 100%;
+      height: 100%;
+      stroke: #FFD36B;
+    }
+
+    .ranking-item-count-number {
+      font-size: clamp(14px, 2.5vw, 18px);
+      font-weight: 700;
+      color: #333;
+    }
+
+    .ranking-item-count-label {
+      font-size: clamp(11px, 1.8vw, 13px);
+      color: #666;
+    }
+
+    .filter-button {
+      background: #FFD36B;
+      color: #333;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-button:hover {
+      background: #FFF2D6;
+      transform: translateY(-2px);
+    }
+
+    .filter-button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .filter-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      margin-top: 8px;
+      padding: 20px;
+      min-width: 280px;
+      display: none;
+      z-index: 1000;
+      animation: dropdownSlideIn 0.2s ease-out;
+    }
+
+    .filter-dropdown.active {
+      display: block;
+    }
+
+    .filter-dropdown-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #333;
+      margin: 0 0 16px 0;
+    }
+
+    .filter-group {
+      margin-bottom: 16px;
+    }
+
+    .filter-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .filter-group-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .filter-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #333;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #FFD36B;
+    }
+
+    .filter-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #333;
+      background: white;
+      transition: all 0.3s;
+    }
+
+    .filter-input:focus {
+      outline: none;
+      border-color: #FFD36B;
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .btn-filter-apply {
+      flex: 1;
+      background: #FFD36B;
+      color: #333;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-filter-apply:hover {
+      background: #FFF2D6;
+    }
+
+    .btn-filter-reset {
+      flex: 1;
+      background: #f5f5f5;
+      color: #666;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-filter-reset:hover {
+      background: #e0e0e0;
+    }
+
+    .filter-wrapper {
+      position: relative;
+    }
+
+    .btn-delete-user {
+      background: #F44336;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 12px;
+    }
+
+    .btn-delete-user:hover {
+      background: #D32F2F;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+    }
+
+    .btn-delete-user svg {
+      width: 18px;
+      height: 18px;
     }
 
     @keyframes slideInUp {
@@ -897,64 +1184,13 @@
      <p class="login-subtitle" id="loginSubtitle">Acesse o sistema</p>
     </div>
     <div class="error-message" id="errorMessage"></div>
+    <div class="success-message" id="successMessage"></div>
     <form id="loginForm">
      <div class="form-group"><label for="loginId" class="form-label">CPF</label> <input type="text" id="loginId" class="form-input" placeholder="000.000.000-00" maxlength="14" required>
      </div>
      <div class="form-group"><label for="loginPassword" class="form-label">Senha</label> <input type="password" id="loginPassword" class="form-input" placeholder="Digite sua senha" required>
-     </div><button type="submit" class="btn btn-primary">Entrar</button> <button type="button" class="btn btn-secondary" id="btnRegister">Cadastrar-se</button>
+     </div><button type="submit" class="btn btn-primary" id="btnLogin">Entrar</button> <button type="button" class="btn btn-secondary" id="btnRegister">Cadastrar-se</button>
     </form>
-   </div>
-  </div><!-- Modal de Novo RID -->
-  <div class="modal-overlay" id="ridModal">
-   <div class="modal-content" style="max-width: 700px;">
-    <div class="modal-header">
-     <h2 class="modal-title">Novo RID</h2><button class="btn-close" id="btnCloseRIDModal">×</button>
-    </div>
-    <div class="modal-body">
-     <div class="error-message" id="ridModalErrorMessage"></div>
-     <form id="ridForm">
-      <div class="form-group"><label for="ridEmitente" class="form-label">1. Emitente</label> <input type="text" id="ridEmitente" class="form-input" placeholder="Nome do emitente" required>
-      </div>
-      <div class="form-group"><label class="form-label">2. Tipo de contrato</label> <select id="ridTipoContrato" class="form-input" required> <option value="">Selecione o tipo</option> <option value="Funcionário">Funcionário</option> <option value="Terceiro Contratado">Terceiro Contratado</option> <option value="Terceiro Eventual">Terceiro Eventual</option> <option value="Visitante">Visitante</option> </select>
-      </div>
-      <div class="form-group"><label for="ridUnidade" class="form-label">3. Unidade</label> <input type="text" id="ridUnidade" class="form-input" placeholder="Insira a unidade" required>
-      </div>
-      <div class="form-group"><label class="form-label">4. Setor do emitente</label> <select id="ridSetor" class="form-input" required> <option value="">Selecione o setor</option> <option value="ADM">ADM</option> <option value="M. MOVEL">M. MOVEL</option> <option value="M. FIXA">M. FIXA</option> <option value="M. ELÉTRICA">M. ELÉTRICA</option> <option value="PRODUÇÃO">PRODU��ÃO</option> <option value="MINA">MINA</option> </select>
-      </div>
-      <div class="form-group"><label for="ridData" class="form-label">5. Data</label> <input type="date" id="ridData" class="form-input" required>
-      </div>
-      <div class="form-group"><label class="form-label">6. Incidente ou Desvios</label> <select id="ridIncidente" class="form-input" required> <option value="">Selecione o tipo</option> <option value="Condição de Risco">Condição de Risco</option> <option value="Desvio Comportamental">Desvio Comportamental</option> <option value="Dano Material">Dano Material</option> <option value="Quase acidente">Quase acidente</option> </select>
-      </div>
-      <div class="form-group"><label class="form-label">7. Origem da detecção</label> <select id="ridOrigem" class="form-input" required> <option value="">Selecione a origem</option> <option value="CSL">CSL</option> <option value="Inspeção programada">Inspeção programada</option> <option value="Inspeção não programada">Inspeção não programada</option> <option value="Observação Comportamental">Observação Comportamental</option> <option value="Constatação espontânea">Constatação espontânea</option> <option value="Auditoria">Auditoria</option> </select>
-      </div>
-      <div class="form-group"><label for="ridLocal" class="form-label">8. Local da ocorrência</label> <input type="text" id="ridLocal" class="form-input" placeholder="Descreva o local" required>
-      </div>
-      <div class="form-group"><label for="ridDescricao" class="form-label">9. Descrição da Ocorrência</label> <textarea id="ridDescricao" class="form-input" placeholder="Descreva detalhadamente a ocorrência" rows="4" required style="resize: vertical; min-height: 80px;"></textarea>
-      </div>
-      <div class="form-group"><label class="form-label">10. Classificação de risco</label>
-       <div style="font-size: 12px; color: #666; margin-bottom: 8px; line-height: 1.5;"><strong>Baixo:</strong> Situações com baixo potencial de causar acidente.<br><strong>Médio:</strong> Situações que podem causar acidente leve se não forem corrigidas.<br><strong>Alto:</strong> Situações com alto potencial de causar acidente grave ou incapacitante.<br><strong>Cr��tico:</strong> Situações com risco iminente de acidente grave ou fatal.
-       </div><select id="ridClassificacao" class="form-input" required> <option value="">Selecione a classificação</option> <option value="Baixo">Baixo</option> <option value="Médio">Médio</option> <option value="Alto">Alto</option> <option value="Crítico">Crítico</option> </select>
-      </div>
-      <div class="form-group"><label for="ridAcaoImediata" class="form-label">11. Ação Imediata</label> <textarea id="ridAcaoImediata" class="form-input" placeholder="Descreva a ação imediata tomada" rows="3" required style="resize: vertical; min-height: 60px;"></textarea>
-      </div>
-      <div class="form-group"><label class="form-label">12. Status</label>
-       <div style="font-size: 12px; color: #666; margin-bottom: 8px;"><strong>Corrigido:</strong> RID que já foi resolvido.<br><strong>Vencido:</strong> RID pendente que vai ser passado para um encarregado resolver.
-       </div><select id="ridStatus" class="form-input" required> <option value="">Selecione o status</option> <option value="CORRIGIDO">CORRIGIDO</option> <option value="VENCIDO">VENCIDO</option> </select>
-      </div><button type="submit" class="btn btn-primary" id="btnSubmitRID">Cadastrar RID</button> <button type="button" class="btn btn-secondary" id="btnCancelRID">Cancelar</button>
-     </form>
-    </div>
-   </div>
-  </div><!-- Modal de Confirmação de Exclusão -->
-  <div class="confirm-modal" id="confirmDeleteModal">
-   <div class="confirm-modal-content">
-    <div class="confirm-modal-icon">
-     <svg viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path> <line x1="12" y1="9" x2="12" y2="13"></line> <line x1="12" y1="17" x2="12.01" y2="17"></line>
-     </svg>
-    </div>
-    <h3 class="confirm-modal-title">Tem certeza?</h3>
-    <p class="confirm-modal-message" id="confirmDeleteMessage">Deseja realmente deletar este funcionário? Esta ação não pode ser desfeita.</p>
-    <div class="confirm-modal-buttons"><button class="btn-confirm-cancel" id="btnCancelDelete">Cancelar</button> <button class="btn-confirm-delete" id="btnConfirmDelete">Deletar</button>
-    </div>
    </div>
   </div><!-- Modal de Cadastro -->
   <div class="modal-overlay" id="registerModal">
@@ -999,9 +1235,9 @@
    </header>
    <nav class="panel-menu"><button class="menu-item active" id="adminMenuDashboard">
      <svg width="18" height="18" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect> <rect x="14" y="3" width="7" height="7"></rect> <rect x="14" y="14" width="7" height="7"></rect> <rect x="3" y="14" width="7" height="7"></rect>
-     </svg> Dashboard </button> <button class="menu-item" id="adminMenuRIDs">
+     </svg> Dashboard </button> <button class="menu-item" id="adminMenuRids">
      <svg width="18" height="18" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path> <polyline points="14 2 14 8 20 8"></polyline> <line x1="16" y1="13" x2="8" y2="13"></line> <line x1="16" y1="17" x2="8" y2="17"></line>
-     </svg> RID's </button> <button class="menu-item" id="adminMenuFuncionarios">
+     </svg> RIDs </button> <button class="menu-item" id="adminMenuFuncionarios">
      <svg width="18" height="18" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path> <circle cx="9" cy="7" r="4"></circle> <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path> <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
      </svg> Funcionários </button>
    </nav>
@@ -1014,12 +1250,8 @@
         </svg>
        </div>
        <div class="dashboard-card-content">
-        <div class="dashboard-card-title">
-         Total de RIDs Emitidos
-        </div>
-        <div class="dashboard-card-value" id="totalRIDs">
-         0
-        </div>
+        <h3 class="dashboard-card-title">Total de RIDs</h3>
+        <p class="dashboard-card-value" id="totalRids">0</p>
        </div>
       </div>
       <div class="dashboard-card andamento">
@@ -1028,83 +1260,80 @@
         </svg>
        </div>
        <div class="dashboard-card-content">
-        <div class="dashboard-card-title">
-         RIDs em Andamento
-        </div>
-        <div class="dashboard-card-value" id="ridsAndamento">
-         0
-        </div>
+        <h3 class="dashboard-card-title">Em Andamento</h3>
+        <p class="dashboard-card-value" id="ridsAndamento">0</p>
        </div>
       </div>
       <div class="dashboard-card vencidos">
        <div class="dashboard-card-icon">
-        <svg viewbox="0 0 24 24" fill="none" stroke="#E57373" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path> <line x1="12" y1="9" x2="12" y2="13"></line> <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        <svg viewbox="0 0 24 24" fill="none" stroke="#E57373" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle> <line x1="15" y1="9" x2="9" y2="15"></line> <line x1="9" y1="9" x2="15" y2="15"></line>
         </svg>
        </div>
        <div class="dashboard-card-content">
-        <div class="dashboard-card-title">
-         RIDs Vencidos
-        </div>
-        <div class="dashboard-card-value" id="ridsVencidos">
-         0
-        </div>
+        <h3 class="dashboard-card-title">Vencidos</h3>
+        <p class="dashboard-card-value" id="ridsVencidos">0</p>
        </div>
       </div>
       <div class="dashboard-card corrigidos">
        <div class="dashboard-card-icon">
-        <svg viewbox="0 0 24 24" fill="none" stroke="#FFE082" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path> <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        <svg viewbox="0 0 24 24" fill="none" stroke="#FFD36B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path> <polyline points="22 4 12 14.01 9 11.01"></polyline>
         </svg>
        </div>
        <div class="dashboard-card-content">
-        <div class="dashboard-card-title">
-         RIDs Corrigidos
-        </div>
-        <div class="dashboard-card-value" id="ridsCorrigidos">
-         0
-        </div>
+        <h3 class="dashboard-card-title">Corrigidos</h3>
+        <p class="dashboard-card-value" id="ridsCorrigidos">0</p>
        </div>
       </div>
      </div>
      <div class="recent-rids-section">
       <div class="section-header">
-       <h3 class="section-title">RIDs Emitidos Recentemente</h3><span class="section-subtitle">��ltimos 7 dias</span>
+       <h3 class="section-title">RIDs Recentes</h3><span class="section-subtitle">Última semana</span>
       </div>
       <div class="recent-rids-card">
-       <div class="empty-state" id="emptyStateRecent">
-        <svg width="64" height="64" viewbox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path> <polyline points="14 2 14 8 20 8"></polyline>
+       <div class="empty-state" id="emptyStateRids">
+        <svg width="64" height="64" viewbox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path> <polyline points="14 2 14 8 20 8"></polyline> <line x1="16" y1="13" x2="8" y2="13"></line> <line x1="16" y1="17" x2="8" y2="17"></line>
         </svg>
-        <p>Nenhum RID emitido nos últimos 7 dias</p>
+        <p>Nenhum RID emitido na última semana</p>
        </div>
        <div class="rids-list" id="recentRidsList"></div>
       </div>
      </div>
      <div class="recent-rids-section">
       <div class="section-header">
-       <h3 class="section-title">Top 3 Funcionários com Mais RIDs</h3><span class="section-subtitle">Ranking geral</span>
+       <h3 class="section-title">Ranking de Emissões</h3>
+       <div class="filter-wrapper"><button class="filter-button" id="btnFilterRanking">
+         <svg viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+         </svg> Filtro </button>
+        <div class="filter-dropdown" id="filterDropdown">
+         <h4 class="filter-dropdown-title">Filtrar por Período</h4>
+         <div class="filter-group"><label class="filter-group-label">Mês</label> <select class="filter-select" id="filterMonth"> <option value="0">Janeiro</option> <option value="1">Fevereiro</option> <option value="2">Março</option> <option value="3">Abril</option> <option value="4">Maio</option> <option value="5">Junho</option> <option value="6">Julho</option> <option value="7">Agosto</option> <option value="8">Setembro</option> <option value="9">Outubro</option> <option value="10">Novembro</option> <option value="11">Dezembro</option> </select>
+         </div>
+         <div class="filter-group"><label class="filter-group-label">Ano</label> <input type="number" class="filter-input" id="filterYear" placeholder="Digite o ano" min="2020" max="2100">
+         </div>
+         <div class="filter-actions"><button class="btn-filter-apply" id="btnApplyFilter">Aplicar</button> <button class="btn-filter-reset" id="btnResetFilter">Resetar</button>
+         </div>
+        </div>
+       </div>
       </div>
       <div class="recent-rids-card">
-       <div class="empty-state" id="emptyStateTop3">
-        <svg width="64" height="64" viewbox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path> <circle cx="9" cy="7" r="4"></circle> <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path> <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-        <p>Nenhum RID emitido ainda</p>
+       <div class="empty-state" id="emptyStateRanking">
+        <p>Nenhum RID emitido neste mês</p>
        </div>
-       <div class="rids-list" id="top3EmployeesList"></div>
+       <div class="rids-list" id="rankingList"></div>
       </div>
      </div>
-    </div><!-- RIDs List Content -->
-    <div id="adminRIDsContent" class="hidden">
+    </div><!-- RIDs Content -->
+    <div id="adminRidsContent" class="hidden">
      <div class="section-header">
-      <h3 class="section-title">Todos os RIDs Emitidos</h3><button class="btn btn-primary" id="btnNewRID" style="width: auto; padding: 12px 24px; display: flex; align-items: center; gap: 8px;">
-       <svg width="20" height="20" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line> <line x1="5" y1="12" x2="19" y2="12"></line>
-       </svg> Novo RID </button>
+      <h3 class="section-title">Gestão e Emissão de RIDs</h3><span class="section-subtitle">Total: <span id="totalRidsGestao">0</span> RIDs</span>
      </div>
      <div class="recent-rids-card">
-      <div class="empty-state" id="emptyStateAllRIDs">
-       <svg width="64" height="64" viewbox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path> <polyline points="14 2 14 8 20 8"></polyline>
+      <div class="empty-state" id="emptyStateRidsGestao">
+       <svg width="64" height="64" viewbox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path> <polyline points="14 2 14 8 20 8"></polyline> <line x1="16" y1="13" x2="8" y2="13"></line> <line x1="16" y1="17" x2="8" y2="17"></line>
        </svg>
-       <p>Nenhum RID emitido ainda</p>
+       <p>Nenhum RID cadastrado ainda</p>
       </div>
-      <div class="rids-list" id="allRIDsList"></div>
+      <div class="rids-list" id="ridsGestaoList"></div>
      </div>
     </div><!-- Funcionários Content -->
     <div id="adminFuncionariosContent" class="hidden">
@@ -1121,7 +1350,7 @@
      </div>
     </div>
    </div>
-  </div><!-- Painel Funcion��rio -->
+  </div><!-- Painel Funcionário -->
   <div class="panel-container" id="employeePanel">
    <header class="panel-header">
     <div class="panel-logo" id="employeePanelLogo"><img src="https://www.jdemito.com.br/wp-content/themes/jdemito/img/logo.png" alt="J Demito" class="panel-logo-image" onerror="this.style.display='none';">
@@ -1148,8 +1377,8 @@
    </nav>
    <div class="panel-content">
     <div class="welcome-message">
-     <h2>Painel de Visualização e Emissão</h2>
-     <p>Área para visualização e emissão de RIDs</p>
+     <h2>Painel de Visualização</h2>
+     <p>Área para visualização de RIDs</p>
     </div>
    </div>
   </div>
@@ -1170,7 +1399,6 @@
     }
     
     const db = firebase.firestore();
-    const auth = firebase.auth();
 
     const defaultConfig = {
       company_name: "J Demito",
@@ -1188,7 +1416,9 @@
 
     let currentUser = null;
     let allUsers = [];
-    let allRIDs = [];
+    let allRids = [];
+    let rankingFilterMonth = null;
+    let rankingFilterYear = null;
 
     // Lista de CPFs administrativos
     const adminCPFs = [
@@ -1202,6 +1432,7 @@
     const dataHandler = {
       onDataChanged(data) {
         allUsers = data;
+        renderFuncionarios();
       }
     };
 
@@ -1213,141 +1444,52 @@
           id: doc.id,
           ...doc.data()
         }));
+        renderFuncionarios();
       } catch (error) {
         console.error('Erro ao carregar usuários:', error);
       }
     }
 
-    // Carregar RIDs do Firebase
-    async function loadRIDsFromFirebase() {
-      try {
-        const snapshot = await db.collection('rids').orderBy('created_at', 'desc').get();
-        allRIDs = snapshot.docs.map(doc => ({
+    // Carregar RIDs do Firebase em tempo real
+    function listenToRids() {
+      db.collection('rids').orderBy('created_at', 'desc').onSnapshot((snapshot) => {
+        allRids = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
-        updateDashboardStats();
-        renderAllRIDs();
-      } catch (error) {
+        renderDashboard();
+      }, (error) => {
         console.error('Erro ao carregar RIDs:', error);
-      }
+      });
     }
 
     async function onConfigChange(config) {
       const baseFont = config.font_family || defaultConfig.font_family;
       const baseFontStack = 'Tahoma, Geneva, Verdana, sans-serif';
-      const baseSize = config.font_size || defaultConfig.font_size;
       
       document.body.style.fontFamily = `${baseFont}, ${baseFontStack}`;
       
       const primaryColor = config.primary_color || defaultConfig.primary_color;
-      const secondaryColor = config.secondary_color || defaultConfig.secondary_color;
       const backgroundColor = config.background_color || defaultConfig.background_color;
-      const textColor = config.text_color || defaultConfig.text_color;
       
-      document.querySelector('.app-container').style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
+      document.querySelector('.app-container').style.background = backgroundColor;
       document.querySelectorAll('.panel-container').forEach(panel => {
-        panel.style.background = backgroundColor;
+        panel.style.background = config.secondary_color || defaultConfig.secondary_color;
       });
       
       document.querySelectorAll('.login-title').forEach(el => {
         el.style.color = primaryColor;
-        el.style.fontSize = `${baseSize * 1.5}px`;
       });
       
       document.querySelectorAll('.btn-primary').forEach(btn => {
         btn.style.background = primaryColor;
       });
       
-      document.querySelectorAll('.user-badge').forEach(badge => {
-        if (badge.textContent === 'ADMINISTRADOR') {
-          badge.style.background = primaryColor;
-        }
-      });
-      
-      const companyName = config.company_name || defaultConfig.company_name;
-      const systemTitle = config.system_title || defaultConfig.system_title;
       const loginTitle = config.login_title || defaultConfig.login_title;
       const loginSubtitle = config.login_subtitle || defaultConfig.login_subtitle;
       
       document.getElementById('loginTitle').textContent = loginTitle;
       document.getElementById('loginSubtitle').textContent = loginSubtitle;
-    }
-
-    async function initApp() {
-      if (window.dataSdk) {
-        const initResult = await window.dataSdk.init(dataHandler);
-        if (!initResult.isOk) {
-          console.error("Erro ao inicializar Data SDK");
-        }
-      }
-
-      if (window.elementSdk) {
-        await window.elementSdk.init({
-          defaultConfig,
-          onConfigChange,
-          mapToCapabilities: (config) => ({
-            recolorables: [
-              {
-                get: () => config.primary_color || defaultConfig.primary_color,
-                set: (value) => {
-                  config.primary_color = value;
-                  window.elementSdk.setConfig({ primary_color: value });
-                }
-              },
-              {
-                get: () => config.secondary_color || defaultConfig.secondary_color,
-                set: (value) => {
-                  config.secondary_color = value;
-                  window.elementSdk.setConfig({ secondary_color: value });
-                }
-              },
-              {
-                get: () => config.background_color || defaultConfig.background_color,
-                set: (value) => {
-                  config.background_color = value;
-                  window.elementSdk.setConfig({ background_color: value });
-                }
-              },
-              {
-                get: () => config.text_color || defaultConfig.text_color,
-                set: (value) => {
-                  config.text_color = value;
-                  window.elementSdk.setConfig({ text_color: value });
-                }
-              },
-              {
-                get: () => config.accent_color || defaultConfig.accent_color,
-                set: (value) => {
-                  config.accent_color = value;
-                  window.elementSdk.setConfig({ accent_color: value });
-                }
-              }
-            ],
-            borderables: [],
-            fontEditable: {
-              get: () => config.font_family || defaultConfig.font_family,
-              set: (value) => {
-                config.font_family = value;
-                window.elementSdk.setConfig({ font_family: value });
-              }
-            },
-            fontSizeable: {
-              get: () => config.font_size || defaultConfig.font_size,
-              set: (value) => {
-                config.font_size = value;
-                window.elementSdk.setConfig({ font_size: value });
-              }
-            }
-          }),
-          mapToEditPanelValues: (config) => new Map([
-            ["company_name", config.company_name || defaultConfig.company_name],
-            ["system_title", config.system_title || defaultConfig.system_title],
-            ["login_title", config.login_title || defaultConfig.login_title],
-            ["login_subtitle", config.login_subtitle || defaultConfig.login_subtitle]
-          ])
-        });
-      }
     }
 
     function showError(message) {
@@ -1356,7 +1498,16 @@
       errorDiv.style.display = 'block';
       setTimeout(() => {
         errorDiv.style.display = 'none';
-      }, 4000);
+      }, 5000);
+    }
+
+    function showSuccess(message) {
+      const successDiv = document.getElementById('successMessage');
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+      setTimeout(() => {
+        successDiv.style.display = 'none';
+      }, 5000);
     }
 
     function showPanel(userType, userName, userSector) {
@@ -1390,39 +1541,62 @@
       }
     });
 
+    // Login Form
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const userId = document.getElementById('loginId').value.trim();
       const password = document.getElementById('loginPassword').value;
+      const btnLogin = document.getElementById('btnLogin');
 
       if (!userId || !password) {
         showError('Por favor, preencha todos os campos');
         return;
       }
 
-      const user = allUsers.find(u => u.user_id === userId);
-      
-      if (!user) {
-        showError('CPF não encontrado. Por favor, cadastre-se primeiro.');
-        return;
-      }
+      btnLogin.disabled = true;
+      btnLogin.textContent = 'Entrando...';
 
-      // Verificar senha
-      if (user.password !== password) {
-        showError('Senha incorreta. Tente novamente.');
-        return;
-      }
+      try {
+        const snapshot = await db.collection('users').where('user_id', '==', userId).get();
+        
+        if (snapshot.empty) {
+          btnLogin.disabled = false;
+          btnLogin.textContent = 'Entrar';
+          showError('CPF não encontrado. Por favor, cadastre-se primeiro.');
+          return;
+        }
 
-      // Verifica se o CPF está na lista de administradores
-      const userType = adminCPFs.includes(userId) ? 'admin' : user.user_type;
-      
-      currentUser = user;
-      showPanel(userType, user.name, user.sector);
-      
-      // Carregar RIDs se for admin
-      if (userType === 'admin') {
-        await loadRIDsFromFirebase();
+        const userDoc = snapshot.docs[0];
+        const user = { id: userDoc.id, ...userDoc.data() };
+
+        if (user.password !== password) {
+          btnLogin.disabled = false;
+          btnLogin.textContent = 'Entrar';
+          showError('Senha incorreta. Tente novamente.');
+          return;
+        }
+
+        const userType = adminCPFs.includes(userId) ? 'admin' : user.user_type;
+        
+        currentUser = user;
+        
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Entrar';
+        
+        showPanel(userType, user.name, user.sector);
+        
+        if (userType === 'admin') {
+          await loadUsersFromFirebase();
+          listenToRids();
+        } else {
+          listenToRids();
+        }
+      } catch (error) {
+        console.error('Erro ao fazer login:', error);
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Entrar';
+        showError('Erro ao fazer login. Tente novamente.');
       }
     });
 
@@ -1472,17 +1646,11 @@
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      if (allUsers.length >= 999) {
-        showModalError('Limite máximo de 999 usuários atingido');
-        return;
-      }
-
       const name = document.getElementById('registerName').value.trim();
       const cpf = document.getElementById('registerCpf').value.trim();
       const sector = document.getElementById('registerSector').value;
       const password = document.getElementById('registerPassword').value;
       const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
-      const userType = 'employee';
 
       if (!name || !cpf || !sector || !password || !passwordConfirm) {
         showModalError('Por favor, preencha todos os campos');
@@ -1499,39 +1667,41 @@
         return;
       }
 
-      const existingUser = allUsers.find(u => u.user_id === cpf);
-      if (existingUser) {
-        showModalError('Este CPF já está cadastrado');
-        return;
-      }
-
       const btnSubmit = document.getElementById('btnSubmitRegister');
       btnSubmit.disabled = true;
       btnSubmit.textContent = 'Cadastrando...';
 
-      const newUser = {
-        user_id: cpf,
-        name: name,
-        user_type: userType,
-        sector: sector,
-        password: password,
-        created_at: new Date().toISOString()
-      };
-
       try {
-        // Salvar no Firebase
+        const snapshot = await db.collection('users').where('user_id', '==', cpf).get();
+        
+        if (!snapshot.empty) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'Cadastrar';
+          showModalError('Este CPF já está cadastrado');
+          return;
+        }
+
+        const newUser = {
+          user_id: cpf,
+          name: name,
+          user_type: 'employee',
+          sector: sector,
+          password: password,
+          created_at: new Date().toISOString()
+        };
+
         await db.collection('users').add(newUser);
         
-        // Salvar no Data SDK também
-        const result = await window.dataSdk.create(newUser);
+        if (window.dataSdk) {
+          await window.dataSdk.create(newUser);
+        }
         
         btnSubmit.disabled = false;
         btnSubmit.textContent = 'Cadastrar';
         
         closeRegisterModal();
-        showError('✅ Cadastro realizado com sucesso! Faça login agora.');
+        showSuccess('✅ Cadastro realizado com sucesso! Faça login agora.');
         
-        // Recarregar usuários
         await loadUsersFromFirebase();
       } catch (error) {
         console.error('Erro ao cadastrar:', error);
@@ -1569,171 +1739,281 @@
     // Menu Dashboard Admin
     document.getElementById('adminMenuDashboard').addEventListener('click', () => {
       document.getElementById('adminDashboardContent').classList.remove('hidden');
-      document.getElementById('adminRIDsContent').classList.add('hidden');
+      document.getElementById('adminRidsContent').classList.add('hidden');
       document.getElementById('adminFuncionariosContent').classList.add('hidden');
       
       document.getElementById('adminMenuDashboard').classList.add('active');
-      document.getElementById('adminMenuRIDs').classList.remove('active');
+      document.getElementById('adminMenuRids').classList.remove('active');
       document.getElementById('adminMenuFuncionarios').classList.remove('active');
     });
 
     // Menu RIDs Admin
-    document.getElementById('adminMenuRIDs').addEventListener('click', () => {
+    document.getElementById('adminMenuRids').addEventListener('click', () => {
       document.getElementById('adminDashboardContent').classList.add('hidden');
-      document.getElementById('adminRIDsContent').classList.remove('hidden');
+      document.getElementById('adminRidsContent').classList.remove('hidden');
       document.getElementById('adminFuncionariosContent').classList.add('hidden');
       
       document.getElementById('adminMenuDashboard').classList.remove('active');
-      document.getElementById('adminMenuRIDs').classList.add('active');
+      document.getElementById('adminMenuRids').classList.add('active');
       document.getElementById('adminMenuFuncionarios').classList.remove('active');
       
-      // Atualizar lista de RIDs
-      renderAllRIDs();
+      renderRidsGestao();
     });
 
     // Menu Funcionários Admin
     document.getElementById('adminMenuFuncionarios').addEventListener('click', () => {
       document.getElementById('adminDashboardContent').classList.add('hidden');
-      document.getElementById('adminRIDsContent').classList.add('hidden');
+      document.getElementById('adminRidsContent').classList.add('hidden');
       document.getElementById('adminFuncionariosContent').classList.remove('hidden');
       
       document.getElementById('adminMenuDashboard').classList.remove('active');
-      document.getElementById('adminMenuRIDs').classList.remove('active');
+      document.getElementById('adminMenuRids').classList.remove('active');
       document.getElementById('adminMenuFuncionarios').classList.add('active');
       
-      // Atualizar lista de funcionários
       renderFuncionarios();
     });
 
-    document.getElementById('employeeMenuDashboard').addEventListener('click', () => {
-      // Já está na página inicial
-    });
-
-    // Modal de Novo RID
-    function showRIDModalError(message) {
-      const errorDiv = document.getElementById('ridModalErrorMessage');
-      errorDiv.textContent = message;
-      errorDiv.style.display = 'block';
-      setTimeout(() => {
-        errorDiv.style.display = 'none';
-      }, 4000);
-    }
-
-    function openRIDModal() {
-      document.getElementById('ridModal').classList.add('active');
-      document.getElementById('ridForm').reset();
-      // Preencher data atual
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('ridData').value = today;
-    }
-
-    function closeRIDModal() {
-      document.getElementById('ridModal').classList.remove('active');
-      document.getElementById('ridForm').reset();
-    }
-
-    document.getElementById('btnNewRID').addEventListener('click', openRIDModal);
-    document.getElementById('btnCloseRIDModal').addEventListener('click', closeRIDModal);
-    document.getElementById('btnCancelRID').addEventListener('click', closeRIDModal);
-
-    document.getElementById('ridModal').addEventListener('click', (e) => {
-      if (e.target.id === 'ridModal') {
-        closeRIDModal();
-      }
-    });
-
-    document.getElementById('ridForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const btnSubmit = document.getElementById('btnSubmitRID');
-      btnSubmit.disabled = true;
-      btnSubmit.textContent = 'Cadastrando...';
-
-      const ridData = {
-        emitente: document.getElementById('ridEmitente').value.trim(),
-        tipo_contrato: document.getElementById('ridTipoContrato').value,
-        unidade: document.getElementById('ridUnidade').value.trim(),
-        setor: document.getElementById('ridSetor').value,
-        data: document.getElementById('ridData').value,
-        incidente: document.getElementById('ridIncidente').value,
-        origem: document.getElementById('ridOrigem').value,
-        local: document.getElementById('ridLocal').value.trim(),
-        descricao: document.getElementById('ridDescricao').value.trim(),
-        classificacao: document.getElementById('ridClassificacao').value,
-        acao_imediata: document.getElementById('ridAcaoImediata').value.trim(),
-        status: document.getElementById('ridStatus').value,
-        created_by: currentUser ? currentUser.name : 'Desconhecido',
-        created_at: new Date().toISOString()
-      };
-
-      try {
-        // Salvar no Firebase
-        await db.collection('rids').add(ridData);
-        
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = 'Cadastrar RID';
-        closeRIDModal();
-        
-        // Mostrar mensagem de sucesso
-        const successDiv = document.createElement('div');
-        successDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; font-weight: 600;';
-        successDiv.textContent = '✅ RID cadastrado com sucesso!';
-        document.body.appendChild(successDiv);
-        
-        setTimeout(() => {
-          successDiv.remove();
-        }, 3000);
-        
-        // Recarregar RIDs
-        await loadRIDsFromFirebase();
-      } catch (error) {
-        console.error('Erro ao cadastrar RID:', error);
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = 'Cadastrar RID';
-        showRIDModalError('Erro ao cadastrar RID. Tente novamente.');
-      }
-    });
-
-    function renderAllRIDs() {
-      const allRIDsList = document.getElementById('allRIDsList');
-      const emptyState = document.getElementById('emptyStateAllRIDs');
+    // Renderizar Dashboard
+    function renderDashboard() {
+      const totalRids = allRids.length;
+      const ridsAndamento = allRids.filter(rid => rid.status === 'andamento').length;
+      const ridsVencidos = allRids.filter(rid => rid.status === 'vencido').length;
+      const ridsCorrigidos = allRids.filter(rid => rid.status === 'corrigido').length;
       
-      // Por enquanto, sem RIDs cadastrados
-      // Quando houver RIDs, eles serão exibidos aqui
-      const rids = []; // Aqui virão os RIDs do sistema
+      document.getElementById('totalRids').textContent = totalRids;
+      document.getElementById('ridsAndamento').textContent = ridsAndamento;
+      document.getElementById('ridsVencidos').textContent = ridsVencidos;
+      document.getElementById('ridsCorrigidos').textContent = ridsCorrigidos;
       
-      if (rids.length === 0) {
+      renderRecentRids();
+      renderRanking();
+    }
+
+    // Renderizar RIDs recentes (última semana)
+    function renderRecentRids() {
+      const recentRidsList = document.getElementById('recentRidsList');
+      const emptyState = document.getElementById('emptyStateRids');
+      
+      // Filtrar RIDs da última semana
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const recentRids = allRids.filter(rid => {
+        const ridDate = new Date(rid.created_at);
+        return ridDate >= oneWeekAgo;
+      }).slice(0, 5); // Mostrar apenas os 5 mais recentes
+      
+      if (recentRids.length === 0) {
         emptyState.style.display = 'block';
-        allRIDsList.style.display = 'none';
+        recentRidsList.style.display = 'none';
       } else {
         emptyState.style.display = 'none';
-        allRIDsList.style.display = 'block';
+        recentRidsList.style.display = 'block';
         
-        allRIDsList.innerHTML = rids.map(rid => `
-          <div class="rid-item">
-            <div class="rid-item-left">
-              <div class="rid-item-icon">
+        recentRidsList.innerHTML = recentRids.map(rid => {
+          const ridDate = new Date(rid.created_at);
+          const formattedDate = ridDate.toLocaleDateString('pt-BR', { 
+            day: '2-digit', 
+            month: '2-digit',
+            year: 'numeric'
+          });
+          
+          let statusClass = '';
+          let statusText = '';
+          
+          if (rid.status === 'andamento') {
+            statusClass = 'andamento';
+            statusText = 'Em Andamento';
+          } else if (rid.status === 'vencido') {
+            statusClass = 'vencido';
+            statusText = 'Vencido';
+          } else if (rid.status === 'corrigido') {
+            statusClass = 'corrigido';
+            statusText = 'Corrigido';
+          }
+          
+          return `
+            <div class="rid-item">
+              <div class="rid-item-left">
+                <div class="rid-item-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                  </svg>
+                </div>
+                <div class="rid-item-info">
+                  <h4 class="rid-item-title">RID #${rid.numero || rid.id.substring(0, 8)}</h4>
+                  <p class="rid-item-meta">${rid.setor || 'Setor não informado'} • ${rid.responsavel || 'Responsável não informado'}</p>
+                </div>
+              </div>
+              <div class="rid-item-right">
+                <span class="rid-status-badge ${statusClass}">${statusText}</span>
+                <span class="rid-item-date">${formattedDate}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // Inicializar filtro de ano
+    function initializeYearFilter() {
+      const filterYear = document.getElementById('filterYear');
+      const currentYear = new Date().getFullYear();
+      
+      // Definir ano atual como valor padrão
+      filterYear.value = currentYear;
+    }
+
+    // Renderizar Ranking de Emissões do Mês
+    function renderRanking() {
+      const rankingList = document.getElementById('rankingList');
+      const emptyState = document.getElementById('emptyStateRanking');
+      
+      // Usar filtro se definido, senão usar mês atual
+      const now = new Date();
+      const currentMonth = rankingFilterMonth !== null ? rankingFilterMonth : now.getMonth();
+      const currentYear = rankingFilterYear !== null ? rankingFilterYear : now.getFullYear();
+      
+      const monthRids = allRids.filter(rid => {
+        const ridDate = new Date(rid.created_at);
+        return ridDate.getMonth() === currentMonth && ridDate.getFullYear() === currentYear;
+      });
+      
+      if (monthRids.length === 0) {
+        emptyState.style.display = 'block';
+        rankingList.style.display = 'none';
+        return;
+      }
+      
+      // Contar RIDs por emissor
+      const emissoresCount = {};
+      
+      monthRids.forEach(rid => {
+        const emissor = rid.emissor || 'Não informado';
+        if (!emissoresCount[emissor]) {
+          emissoresCount[emissor] = {
+            name: emissor,
+            sector: rid.setor_emissor || 'Setor não informado',
+            count: 0
+          };
+        }
+        emissoresCount[emissor].count++;
+      });
+      
+      // Converter para array e ordenar por quantidade
+      const ranking = Object.values(emissoresCount).sort((a, b) => b.count - a.count);
+      
+      // Mostrar apenas top 10
+      const topRanking = ranking.slice(0, 10);
+      
+      emptyState.style.display = 'none';
+      rankingList.style.display = 'block';
+      
+      rankingList.innerHTML = topRanking.map((item, index) => {
+        const position = index + 1;
+        let positionClass = 'other';
+        
+        if (position === 1) positionClass = 'first';
+        else if (position === 2) positionClass = 'second';
+        else if (position === 3) positionClass = 'third';
+        
+        const positionDisplay = position === 1 ? '������' : position === 2 ? '🥈' : position === 3 ? '🥉' : position;
+        
+        return `
+          <div class="ranking-item">
+            <div class="ranking-item-left">
+              <div class="ranking-position ${positionClass}">
+                ${positionDisplay}
+              </div>
+              <div class="ranking-item-info">
+                <h4 class="ranking-item-name">${item.name}</h4>
+                <p class="ranking-item-sector">${item.sector}</p>
+              </div>
+            </div>
+            <div class="ranking-item-count">
+              <div class="ranking-item-count-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                 </svg>
               </div>
-              <div class="rid-item-info">
-                <h4 class="rid-item-title">${rid.title}</h4>
-                <p class="rid-item-meta">${rid.employee} ��� ${rid.sector}</p>
+              <div>
+                <div class="ranking-item-count-number">${item.count}</div>
+                <div class="ranking-item-count-label">${item.count === 1 ? 'RID' : 'RIDs'}</div>
               </div>
             </div>
-            <div class="rid-item-right">
-              <span class="rid-status-badge ${rid.status}">${rid.statusText}</span>
-              <span class="rid-item-date">${rid.date}</span>
-            </div>
           </div>
-        `).join('');
+        `;
+      }).join('');
+    }
+
+    // Renderizar lista de RIDs para gestão
+    function renderRidsGestao() {
+      const ridsGestaoList = document.getElementById('ridsGestaoList');
+      const emptyState = document.getElementById('emptyStateRidsGestao');
+      const totalRidsGestao = document.getElementById('totalRidsGestao');
+      
+      if (allRids.length === 0) {
+        emptyState.style.display = 'block';
+        ridsGestaoList.style.display = 'none';
+        totalRidsGestao.textContent = '0';
+      } else {
+        emptyState.style.display = 'none';
+        ridsGestaoList.style.display = 'block';
+        totalRidsGestao.textContent = allRids.length;
+        
+        ridsGestaoList.innerHTML = allRids.map(rid => {
+          const ridDate = new Date(rid.created_at);
+          const formattedDate = ridDate.toLocaleDateString('pt-BR', { 
+            day: '2-digit', 
+            month: '2-digit',
+            year: 'numeric'
+          });
+          
+          let statusClass = '';
+          let statusText = '';
+          
+          if (rid.status === 'andamento') {
+            statusClass = 'andamento';
+            statusText = 'Em Andamento';
+          } else if (rid.status === 'vencido') {
+            statusClass = 'vencido';
+            statusText = 'Vencido';
+          } else if (rid.status === 'corrigido') {
+            statusClass = 'corrigido';
+            statusText = 'Corrigido';
+          }
+          
+          return `
+            <div class="rid-item">
+              <div class="rid-item-left">
+                <div class="rid-item-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                  </svg>
+                </div>
+                <div class="rid-item-info">
+                  <h4 class="rid-item-title">RID #${rid.numero || rid.id.substring(0, 8)}</h4>
+                  <p class="rid-item-meta">${rid.setor || 'Setor não informado'} • ${rid.responsavel || 'Responsável não informado'}</p>
+                </div>
+              </div>
+              <div class="rid-item-right">
+                <span class="rid-status-badge ${statusClass}">${statusText}</span>
+                <span class="rid-item-date">${formattedDate}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
       }
     }
 
-    // Atualizar estatísticas do dashboard (exemplo com dados fict��cios)
-    // Renderizar lista de funcion����rios
+    // Renderizar lista de funcionários
     function renderFuncionarios() {
       const funcionariosList = document.getElementById('funcionariosList');
       const emptyState = document.getElementById('emptyStateFuncionarios');
@@ -1769,14 +2049,13 @@
               </div>
               <div class="rid-item-right">
                 <span class="${userTypeClass}">${userTypeText}</span>
-                <button class="btn-delete-user" data-user-id="${user.id}" style="background: #E57373; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 6px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button class="btn-delete-user" data-user-id="${user.id}" data-user-name="${user.name}" title="Deletar funcionário">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     <line x1="10" y1="11" x2="10" y2="17"></line>
                     <line x1="14" y1="11" x2="14" y2="17"></line>
                   </svg>
-                  Deletar
                 </button>
               </div>
             </div>
@@ -1786,96 +2065,131 @@
         // Adicionar event listeners aos botões de deletar
         document.querySelectorAll('.btn-delete-user').forEach(btn => {
           btn.addEventListener('click', (e) => {
-            const userId = e.currentTarget.getAttribute('data-user-id');
-            const user = allUsers.find(u => u.id === userId);
-            
-            if (!user) return;
-            
-            // Abrir modal de confirmação
-            const confirmModal = document.getElementById('confirmDeleteModal');
-            const confirmMessage = document.getElementById('confirmDeleteMessage');
-            const btnConfirm = document.getElementById('btnConfirmDelete');
-            const btnCancel = document.getElementById('btnCancelDelete');
-            
-            confirmMessage.textContent = `Deseja realmente deletar o funcionário "${user.name}"? Esta ação não pode ser desfeita.`;
-            confirmModal.classList.add('active');
-            
-            // Função para fechar o modal
-            const closeModal = () => {
-              confirmModal.classList.remove('active');
-              btnConfirm.onclick = null;
-              btnCancel.onclick = null;
-            };
-            
-            // Botão cancelar
-            btnCancel.onclick = closeModal;
-            
-            // Botão confirmar
-            btnConfirm.onclick = async () => {
-              btnConfirm.disabled = true;
-              btnConfirm.textContent = 'Deletando...';
-              
-              try {
-                // Deletar do Firebase
-                await db.collection('users').doc(user.id).delete();
-                
-                // Deletar do Data SDK também
-                if (user.__backendId) {
-                  await window.dataSdk.delete(user);
-                }
-                
-                closeModal();
-                
-                // Mostrar mensagem de sucesso
-                const successDiv = document.createElement('div');
-                successDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; font-weight: 600;';
-                successDiv.textContent = '✅ Funcionário deletado com sucesso!';
-                document.body.appendChild(successDiv);
-                
-                setTimeout(() => {
-                  successDiv.remove();
-                }, 3000);
-                
-                // Recarregar usuários
-                await loadUsersFromFirebase();
-                renderFuncionarios();
-              } catch (error) {
-                console.error('Erro ao deletar:', error);
-                
-                // Mostrar mensagem de erro
-                const errorDiv = document.createElement('div');
-                errorDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #F44336; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; font-weight: 600;';
-                errorDiv.textContent = '❌ Erro ao deletar funcionário';
-                document.body.appendChild(errorDiv);
-                
-                setTimeout(() => {
-                  errorDiv.remove();
-                }, 3000);
-                
-                btnConfirm.disabled = false;
-                btnConfirm.textContent = 'Deletar';
-              }
-            };
+            e.stopPropagation();
+            const userId = btn.getAttribute('data-user-id');
+            const userName = btn.getAttribute('data-user-name');
+            showDeleteConfirmation(userId, userName);
           });
         });
       }
     }
-
-    function updateDashboardStats() {
-      const total = allRIDs.length;
-      const vencidos = allRIDs.filter(r => r.status === 'VENCIDO').length;
-      const corrigidos = allRIDs.filter(r => r.status === 'CORRIGIDO').length;
-      const andamento = total - vencidos - corrigidos;
+    
+    // Mostrar modal de confirmação de exclusão
+    function showDeleteConfirmation(userId, userName) {
+      const modal = document.getElementById('confirmModal');
+      const modalMessage = document.getElementById('confirmModalMessage');
+      const btnConfirm = document.getElementById('btnConfirmDelete');
       
-      document.getElementById('totalRIDs').textContent = total;
-      document.getElementById('ridsAndamento').textContent = andamento;
-      document.getElementById('ridsVencidos').textContent = vencidos;
-      document.getElementById('ridsCorrigidos').textContent = corrigidos;
+      modalMessage.textContent = `Tem certeza que deseja deletar o funcionário "${userName}"? Esta ação não pode ser desfeita.`;
+      modal.classList.add('active');
+      
+      // Remover listeners anteriores
+      const newBtn = btnConfirm.cloneNode(true);
+      btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
+      
+      // Adicionar novo listener
+      document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
+        await deleteUser(userId);
+      });
+    }
+    
+    // Deletar usuário
+    async function deleteUser(userId) {
+      const btnConfirm = document.getElementById('btnConfirmDelete');
+      btnConfirm.disabled = true;
+      btnConfirm.textContent = 'Deletando...';
+      
+      try {
+        // Deletar do Firebase
+        await db.collection('users').doc(userId).delete();
+        
+        // Deletar do Data SDK se disponível
+        if (window.dataSdk) {
+          const userToDelete = allUsers.find(u => u.id === userId);
+          if (userToDelete && userToDelete.__backendId) {
+            await window.dataSdk.delete(userToDelete);
+          }
+        }
+        
+        // Recarregar lista
+        await loadUsersFromFirebase();
+        
+        // Fechar modal
+        document.getElementById('confirmModal').classList.remove('active');
+        
+        showSuccess('✅ Funcionário deletado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao deletar funcionário:', error);
+        showError('Erro ao deletar funcionário. Tente novamente.');
+      } finally {
+        btnConfirm.disabled = false;
+        btnConfirm.textContent = 'Sim, deletar';
+      }
     }
 
+    // Eventos do modal de confirmação
+    document.getElementById('btnConfirmCancel').addEventListener('click', () => {
+      document.getElementById('confirmModal').classList.remove('active');
+    });
+
+    document.getElementById('confirmModal').addEventListener('click', (e) => {
+      if (e.target.id === 'confirmModal') {
+        document.getElementById('confirmModal').classList.remove('active');
+      }
+    });
+
+    // Eventos do filtro de ranking
+    document.getElementById('btnFilterRanking').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dropdown = document.getElementById('filterDropdown');
+      dropdown.classList.toggle('active');
+    });
+
+    // Fechar filtro ao clicar fora
+    document.addEventListener('click', (e) => {
+      const filterDropdown = document.getElementById('filterDropdown');
+      const filterButton = document.getElementById('btnFilterRanking');
+      
+      if (!filterDropdown.contains(e.target) && !filterButton.contains(e.target)) {
+        filterDropdown.classList.remove('active');
+      }
+    });
+
+    // Aplicar filtro
+    document.getElementById('btnApplyFilter').addEventListener('click', () => {
+      const selectedMonth = parseInt(document.getElementById('filterMonth').value);
+      const selectedYear = parseInt(document.getElementById('filterYear').value);
+      
+      rankingFilterMonth = selectedMonth;
+      rankingFilterYear = selectedYear;
+      
+      renderRanking();
+      
+      document.getElementById('filterDropdown').classList.remove('active');
+    });
+
+    // Resetar filtro
+    document.getElementById('btnResetFilter').addEventListener('click', () => {
+      const now = new Date();
+      
+      rankingFilterMonth = null;
+      rankingFilterYear = null;
+      
+      document.getElementById('filterMonth').value = now.getMonth();
+      document.getElementById('filterYear').value = now.getFullYear().toString();
+      
+      renderRanking();
+      
+      document.getElementById('filterDropdown').classList.remove('active');
+    });
+
     async function initApp() {
-      // Carregar usuários do Firebase primeiro
-      await loadUsersFromFirebase();
+      // Inicializar filtro de ano
+      initializeYearFilter();
+      
+      // Definir mês atual como selecionado
+      const now = new Date();
+      document.getElementById('filterMonth').value = now.getMonth();
       
       if (window.dataSdk) {
         const initResult = await window.dataSdk.init(dataHandler);
@@ -1953,7 +2267,6 @@
     }
 
     initApp();
-    updateDashboardStats();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a55cc673459861f',t:'MTc2NDI5MDI2NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a65187df73f2d4c',t:'MTc2NDQ1MDY2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
