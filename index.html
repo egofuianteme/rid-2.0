@@ -1615,8 +1615,8 @@
       
       // Filtrar RIDs designados para o usuário atual (apenas administradores)
       const ridsDesignados = allRids.filter(rid => {
-        return rid.designado_cpf === currentUser.user_id;
-      });
+  return rid.designado_cpf === currentUser.user_id && rid.lido !== true;
+});
       
       const isAdmin = currentUser.user_type === "admin";
       
@@ -1650,7 +1650,7 @@
                 <div style="padding: 15px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.3s;" 
                      onmouseover="this.style.background='#f9f9f9'" 
                      onmouseout="this.style.background='white'"
-                     onclick="openRidVisualization('${rid.id}'); document.getElementById('dropdownNotificationsAdmin').classList.remove('active');">
+                     onclick="marcarRidComoLido('${rid.id}'); openRidVisualization('${rid.id}'); document.getElementById('dropdownNotificationsAdmin').classList.remove('active');">
                   <div style="display: flex; align-items: start; gap: 12px;">
                     <div style="width: 40px; height: 40px; background: #FFF2D6; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFD36B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2790,7 +2790,21 @@
       }
     }
 
-    // Função para abrir modal de designação de RID
+    // Marcar notificação como lida ao abrir o RID
+async function marcarRidComoLido(ridId) {
+  try {
+    await db.collection('rids').doc(ridId).update({
+      lido: true
+    });
+
+    updateNotifications(); // Atualiza contadores e lista
+
+  } catch (error) {
+    console.error("Erro ao marcar RID como lido:", error);
+  }
+}
+
+// Função para abrir modal de designação de RID
     async function openDesignarRidModal(ridId, rid) {
       // Buscar todos os administradores
       const admins = allUsers.filter(user => user.user_type === "admin");
@@ -2875,12 +2889,14 @@
         
         try {
           await db.collection('rids').doc(ridId).update({
-            designado_para: adminDesignado.name,
-            designado_cpf: adminDesignado.user_id,
-            designado_setor: adminDesignado.sector,
-            observacoes_designacao: observacoes,
-            data_designacao: new Date().toISOString()
-          });
+  designado_para: adminDesignado.name,
+  designado_cpf: adminDesignado.user_id,
+  designado_setor: adminDesignado.sector,
+  observacoes_designacao: observacoes,
+  data_designacao: new Date().toISOString(),
+  lido: false // 🔥 IMPORTANTE: marca como não lido
+});
+
           
           const successDiv = document.getElementById('designarRidSuccess');
           successDiv.textContent = `✅ RID designado para ${adminDesignado.name} com sucesso!`;
