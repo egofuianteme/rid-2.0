@@ -1615,8 +1615,8 @@
       
       // Filtrar RIDs designados para o usuário atual (apenas administradores)
       const ridsDesignados = allRids.filter(rid => {
-  return rid.designado_cpf === currentUser.user_id && rid.lido !== true;
-});
+        return rid.designado_cpf === currentUser.user_id;
+      });
       
       const isAdmin = currentUser.user_type === "admin";
       
