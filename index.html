@@ -2619,7 +2619,7 @@
       }
       
       // Verificar se é admin
-      const isAdmin = currentUser && adminCPFs.includes(currentUser.user_id);
+      const isAdmin = currentUser && currentUser.user_type === "admin";
       
       const modalHTML = `
         <div class="modal-overlay active" id="visualizarRidModal">
